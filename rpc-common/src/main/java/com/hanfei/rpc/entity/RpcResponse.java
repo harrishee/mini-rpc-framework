@@ -1,6 +1,6 @@
 package com.hanfei.rpc.entity;
 
-import com.hanfei.rpc.enumeration.ResponseCode;
+import com.hanfei.rpc.enumeration.RpcResponseCodeEnum;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -21,13 +21,13 @@ public class RpcResponse<T> implements Serializable {
 
     public static <T> RpcResponse<T> success(T data) {
         RpcResponse<T> response = new RpcResponse<>();
-        response.setStatusCode(ResponseCode.SUCCESS.getCode());
-        response.setMessage(ResponseCode.SUCCESS.getMessage());
+        response.setStatusCode(RpcResponseCodeEnum.SUCCESS.getCode());
+        response.setMessage(RpcResponseCodeEnum.SUCCESS.getMessage());
         response.setData(data);
         return response;
     }
 
-    public static <T> RpcResponse<T> error(ResponseCode code) {
+    public static <T> RpcResponse<T> error(RpcResponseCodeEnum code) {
         RpcResponse<T> response = new RpcResponse<>();
         response.setStatusCode(code.getCode());
         response.setMessage(code.getMessage());

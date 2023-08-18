@@ -1,5 +1,6 @@
 package com.hanfei.test;
 
+import com.hanfei.rpc.api.CalculateService;
 import com.hanfei.rpc.api.HelloObject;
 import com.hanfei.rpc.api.HelloService;
 import com.hanfei.rpc.client.RpcClientProxy;
@@ -15,18 +16,14 @@ public class TestClient {
         // 创建 RpcClientProxy，指定服务器地址和端口
         RpcClientProxy proxy = new RpcClientProxy("127.0.0.1", 9000);
 
-        // 获取 HelloService 接口的代理对象
         HelloService helloService = proxy.getProxy(HelloService.class);
-
-        // 创建 HelloObject 对象
-        HelloObject object = new HelloObject(12, "Hello from client, my id is 12");
-
-        // 远程调用 hello() 方法
+        HelloObject object = new HelloObject(12, "Message from client, sending 12");
         String res = helloService.hello(object);
         System.out.println(res);
 
-        // 远程调用 addNums() 方法
-        String res2 = helloService.addNums(66, 77);
-        System.out.println(res2);
+
+        CalculateService calculateService = proxy.getProxy(CalculateService.class);
+        String addRes = calculateService.addNums(66, 77, "Message from client, sending 66 and 77");
+        System.out.println(addRes);
     }
 }

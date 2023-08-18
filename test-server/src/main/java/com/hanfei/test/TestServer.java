@@ -1,6 +1,9 @@
 package com.hanfei.test;
 
+import com.hanfei.rpc.api.CalculateService;
 import com.hanfei.rpc.api.HelloService;
+import com.hanfei.rpc.registry.ServiceRegistry;
+import com.hanfei.rpc.registry.ServiceRegistryImpl;
 import com.hanfei.rpc.server.RpcServer;
 
 /**
@@ -11,13 +14,14 @@ import com.hanfei.rpc.server.RpcServer;
 public class TestServer {
 
     public static void main(String[] args) {
-        // 创建 HelloService 实例
         HelloService helloService = new HelloServiceImpl();
+        CalculateService calculateService = new CalculateServiceImpl();
 
-        // 创建 RpcServer 实例
-        RpcServer rpcServer = new RpcServer();
+        ServiceRegistry serviceRegistry = new ServiceRegistryImpl();
+        serviceRegistry.register(helloService);
+        serviceRegistry.register(calculateService);
 
-        // 注册服务并启动服务器，监听指定端口
-        rpcServer.register(helloService, 9000);
+        RpcServer rpcServer = new RpcServer(serviceRegistry);
+        rpcServer.start(9000);
     }
 }

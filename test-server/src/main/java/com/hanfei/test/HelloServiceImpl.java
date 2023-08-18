@@ -17,13 +17,7 @@ public class HelloServiceImpl implements HelloService {
 
     @Override
     public String hello(HelloObject object) {
-        logger.info("hello been called：[{}]", object.getMessage());
+        logger.info("***HelloServiceImpl*** Get msg：[{}]", object.getMessage());
         return "Return value from server，id=" + object.getId();
-    }
-
-    @Override
-    public String addNums(int a, int b) {
-        logger.info("addNums been called：[{}]", a + " + " + b);
-        return "Return value from server, " + a + " + " + b + " = " + (a + b);
     }
 }
