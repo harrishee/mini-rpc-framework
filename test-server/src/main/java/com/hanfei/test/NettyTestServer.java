@@ -5,6 +5,8 @@ import com.hanfei.rpc.api.HelloService;
 import com.hanfei.rpc.netty.server.NettyServer;
 import com.hanfei.rpc.registry.DefaultServiceRegistry;
 import com.hanfei.rpc.registry.ServiceRegistry;
+import com.hanfei.test.ServiceImpl.CalculateServiceImpl;
+import com.hanfei.test.ServiceImpl.HelloServiceImpl;
 
 /**
  * @author: harris

@@ -65,5 +65,7 @@ Harris RPC 框架是一个基于 Java 的轻量级 RPC 框架，旨在帮助实�
 此外，通过引入自定义的 RpcException 类，我们增强了异常处理。这有助于更好地管理和传递可能在 RPC 框架中出现的异常情况，提高了系统的健壮性
 
 ### 3. feat: netty communication
-引入了 Netty 作为通信框架，取代了之前的基于 Socket 的通信方式
+引入了 Netty 作为通信框架，取代了之前的基于 Socket 的通信方式。将传统的 BIO 方式传输换成效率更高的 NIO 方式
 
+### 4. feat: kryo serializer
+引入了 Kryo 序列化器，取代了之前的 Json 序列化器

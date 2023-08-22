@@ -5,7 +5,7 @@ import com.hanfei.rpc.codec.CommonDecoder;
 import com.hanfei.rpc.codec.CommonEncoder;
 import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.entity.RpcResponse;
-import com.hanfei.rpc.serializer.JsonSerializer;
+import com.hanfei.rpc.serializer.KryoSerializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -70,11 +70,13 @@ public class NettyClient implements RpcClient {
                     protected void initChannel(SocketChannel ch) {
                         // 获取客户端的 ChannelPipeline，用于添加处理器
                         ChannelPipeline pipeline = ch.pipeline();
-                        // 添加数据解码器，用于将接收到的数据进行解码
+                        // 1 添加数据解码器，用于将接收到的数据进行解码
                         pipeline.addLast(new CommonDecoder())
-                                // 添加数据编码器，并使用 JsonSerializer 进行数据编码
-                                .addLast(new CommonEncoder(new JsonSerializer()))
-                                // 添加业务逻辑处理器 NettyClientHandler
+                                // 2.1 添加数据编码器，并使用 JsonSerializer 进行数据编码
+                                // .addLast(new CommonEncoder(new JsonSerializer()))
+                                // 2.2 添加数据编码器，并使用 KryoSerializer 进行数据编码
+                                .addLast(new CommonEncoder(new KryoSerializer()))
+                                // 3 添加业务逻辑处理器 NettyClientHandler
                                 .addLast(new NettyClientHandler());
                     }
                 });

@@ -3,7 +3,7 @@ package com.hanfei.rpc.netty.server;
 import com.hanfei.rpc.RpcServer;
 import com.hanfei.rpc.codec.CommonDecoder;
 import com.hanfei.rpc.codec.CommonEncoder;
-import com.hanfei.rpc.serializer.JsonSerializer;
+import com.hanfei.rpc.serializer.KryoSerializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -45,11 +45,13 @@ public class NettyServer implements RpcServer {
                         @Override
                         protected void initChannel(SocketChannel ch) {
                             ChannelPipeline pipeline = ch.pipeline();
-                            // 添加数据编码器 CommonEncoder，并使用 JsonSerializer 进行数据编码
-                            pipeline.addLast(new CommonEncoder(new JsonSerializer()));
-                            // 添加数据解码器 CommonDecoder，用于将接收到的数据进行解码
+                            // 1.1 添加数据编码器 CommonEncoder，并使用 JsonSerializer 进行数据编码
+                            // pipeline.addLast(new CommonEncoder(new JsonSerializer()));
+                            // 1.2 添加数据编码器 CommonEncoder，并使用 KryoSerializer 进行数据编码
+                            pipeline.addLast(new CommonEncoder(new KryoSerializer()));
+                            // 2 添加数据解码器 CommonDecoder，用于将接收到的数据进行解码
                             pipeline.addLast(new CommonDecoder());
-                            // 添加业务逻辑处理器 NettyServerHandler
+                            // 3 添加业务逻辑处理器 NettyServerHandler
                             pipeline.addLast(new NettyServerHandler());
                         }
                     });

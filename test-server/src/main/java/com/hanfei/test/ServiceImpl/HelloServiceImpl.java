@@ -1,4 +1,4 @@
-package com.hanfei.test;
+package com.hanfei.test.ServiceImpl;
 
 import com.hanfei.rpc.api.HelloObject;
 import com.hanfei.rpc.api.HelloService;

@@ -5,6 +5,8 @@ import com.hanfei.rpc.api.HelloService;
 import com.hanfei.rpc.registry.DefaultServiceRegistry;
 import com.hanfei.rpc.registry.ServiceRegistry;
 import com.hanfei.rpc.socket.server.SocketServer;
+import com.hanfei.test.ServiceImpl.CalculateServiceImpl;
+import com.hanfei.test.ServiceImpl.HelloServiceImpl;
 
 /**
  * Socket 测试服务器，用于启动 Socket 服务器并注册服务
