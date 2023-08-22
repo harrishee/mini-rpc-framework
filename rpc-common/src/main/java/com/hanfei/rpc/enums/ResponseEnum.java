@@ -1,4 +1,4 @@
-package com.hanfei.rpc.enumeration;
+package com.hanfei.rpc.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum RpcResponseCodeEnum {
+public enum ResponseEnum {
 
     SUCCESS(200, "调用方法成功"),
 

@@ -15,7 +15,7 @@ public class CalculateServiceImpl implements CalculateService {
 
     @Override
     public String addNums(int a, int b, String message) {
-        logger.info("***CalculateServiceImpl*** Get msg：[{}]", message);
+        logger.info("Calculate 实现类被调用，参数：{}, {}, {}", a, b, message);
         return "Return value from server，the sum of " + a + " and " + b + " is " + (a + b);
     }
 }

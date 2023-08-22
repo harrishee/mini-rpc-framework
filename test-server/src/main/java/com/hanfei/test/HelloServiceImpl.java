@@ -17,7 +17,7 @@ public class HelloServiceImpl implements HelloService {
 
     @Override
     public String hello(HelloObject object) {
-        logger.info("***HelloServiceImpl*** Get msg：[{}]", object.getMessage());
+        logger.info("Hello 实现类被调用，参数：{}", object.getMessage());
         return "Return value from server，id=" + object.getId();
     }
 }
