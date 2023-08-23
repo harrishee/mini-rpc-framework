@@ -2,6 +2,7 @@ package com.hanfei.rpc.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
@@ -11,16 +12,19 @@ import java.io.Serializable;
  * @summary: harris-rpc-framework
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class RpcRequest implements Serializable {
-
-    public RpcRequest() {
-    }
 
     /**
      * 序列化版本号
      */
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 请求号
+     */
+    private String requestId;
 
     /**
      * 待调用接口名称

@@ -1,8 +1,10 @@
-package com.hanfei.rpc;
+package com.hanfei.rpc.handler;
 
 import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.entity.RpcResponse;
 import com.hanfei.rpc.enums.ResponseEnum;
+import com.hanfei.rpc.provider.ServiceProvider;
+import com.hanfei.rpc.provider.ServiceProviderImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +22,18 @@ public class RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 
+    private static final ServiceProvider serviceProvider;
+
+    static {
+        serviceProvider = new ServiceProviderImpl();
+    }
+
     /**
      * 处理客户端请求并调用服务方法
      */
-    public Object handle(RpcRequest rpcRequest, Object service) {
+    public Object handle(RpcRequest rpcRequest) {
         Object result = null;
+        Object service = serviceProvider.getServiceProvider(rpcRequest.getInterfaceName());
         try {
             // 调用 invokeTargetMethod 方法，执行具体的服务调用
             result = invokeTargetMethod(rpcRequest, service);
@@ -45,7 +54,7 @@ public class RequestHandler {
             // 通过反射获取服务对象的方法
             method = service.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());
         } catch (NoSuchMethodException e) {
-            return RpcResponse.error(ResponseEnum.METHOD_NOT_FOUND);
+            return RpcResponse.error(ResponseEnum.METHOD_NOT_FOUND, rpcRequest.getRequestId());
         }
         // 通过反射调用目标方法，并返回方法的执行结果
         logger.info("开始调用方法: {}，参数: {}", rpcRequest.getMethodName(), rpcRequest.getParameters());

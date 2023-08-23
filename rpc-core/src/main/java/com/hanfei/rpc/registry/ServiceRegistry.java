@@ -1,7 +1,10 @@
 package com.hanfei.rpc.registry;
 
+import java.net.InetSocketAddress;
+
 /**
- * 服务注册表通用接口
+ * 服务注册中心通用接口，用于服务的注册和查找
+ * 目前只有 Nacos 实现类，以后可以试试 Zookeeper
  *
  * @author: harris
  * @time: 2023
@@ -10,12 +13,12 @@ package com.hanfei.rpc.registry;
 public interface ServiceRegistry {
 
     /**
-     * 将一个服务注册进注册表
+     * 在 Nacos 服务注册中心注册服务实例
      */
-    <T> void register(T service);
+    void register(String serviceName, InetSocketAddress inetSocketAddress);
 
     /**
-     * 根据服务名称获取服务实体
+     * 从 Nacos 服务注册中心查找特定服务的网络地址
      */
-    Object getService(String serviceName);
+    InetSocketAddress lookupService(String serviceName);
 }

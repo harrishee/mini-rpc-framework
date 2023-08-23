@@ -69,3 +69,8 @@ Harris RPC 框架是一个基于 Java 的轻量级 RPC 框架，旨在帮助实�
 
 ### 4. feat: kryo serializer
 引入了 Kryo 序列化器，取代了之前的 Json 序列化器
+
+### 5. feat: nacos services
+引入了 Nacos 服务注册中心，取代了之前的本地注册表方式。将服务注册表从本地转移到了远程服务器上，使得服务的注册和发现更加灵活
+
+需要做负载均衡和注册多个服务

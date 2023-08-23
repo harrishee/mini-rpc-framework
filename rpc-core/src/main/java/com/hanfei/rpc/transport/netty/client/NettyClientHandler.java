@@ -1,4 +1,4 @@
-package com.hanfei.rpc.netty.client;
+package com.hanfei.rpc.transport.netty.client;
 
 import com.hanfei.rpc.entity.RpcResponse;
 import io.netty.channel.ChannelHandlerContext;
@@ -28,7 +28,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse>
             logger.info("客户端接收到消息: {}", msg);
 
             // 定义 AttributeKey 以获取响应对象
-            AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse");
+            AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse" + msg.getRequestId());
 
             // 将 响应对象设置到通道属性中，以便其他地方可以获取
             ctx.channel().attr(key).set(msg);

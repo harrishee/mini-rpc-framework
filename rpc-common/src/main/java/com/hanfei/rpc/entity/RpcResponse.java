@@ -2,6 +2,7 @@ package com.hanfei.rpc.entity;
 
 import com.hanfei.rpc.enums.ResponseEnum;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
@@ -11,15 +12,18 @@ import java.io.Serializable;
  * @summary: harris-rpc-framework
  */
 @Data
+@NoArgsConstructor
 public class RpcResponse<T> implements Serializable {
-
-    public RpcResponse() {
-    }
 
     /**
      * 序列化版本号
      */
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 响应对应的请求号
+     */
+    private String requestId;
 
     /**
      * 响应状态码
@@ -36,22 +40,17 @@ public class RpcResponse<T> implements Serializable {
      */
     private T data;
 
-    /**
-     * 创建一个成功的响应，包含状态码、消息和数据
-     */
-    public static <T> RpcResponse<T> success(T data) {
+    public static <T> RpcResponse<T> success(T data, String requestId) {
         RpcResponse<T> response = new RpcResponse<>();
+        response.setRequestId(requestId);
         response.setStatusCode(ResponseEnum.SUCCESS.getCode());
-        response.setMessage(ResponseEnum.SUCCESS.getMessage());
         response.setData(data);
         return response;
     }
 
-    /**
-     * 创建一个失败的响应，包含状态码和消息
-     */
-    public static <T> RpcResponse<T> error(ResponseEnum code) {
+    public static <T> RpcResponse<T> error(ResponseEnum code, String requestId) {
         RpcResponse<T> response = new RpcResponse<>();
+        response.setRequestId(requestId);
         response.setStatusCode(code.getCode());
         response.setMessage(code.getMessage());
         return response;

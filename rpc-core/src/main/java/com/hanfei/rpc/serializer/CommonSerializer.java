@@ -30,13 +30,10 @@ public interface CommonSerializer {
     static CommonSerializer getByCode(int code) {
         switch (code) {
             case 0:
-                // 返回 Kryo 序列化器
                 return new KryoSerializer();
             case 1:
-                // 返回 JSON 序列化器
                 return new JsonSerializer();
             default:
-                // 未知的序列化器编号，返回 null
                 return null;
         }
     }

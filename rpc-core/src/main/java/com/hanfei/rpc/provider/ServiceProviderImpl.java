@@ -1,4 +1,4 @@
-package com.hanfei.rpc.registry;
+package com.hanfei.rpc.provider;
 
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
@@ -10,15 +10,15 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 默认的服务注册表，负责在注册表中注册和检索服务
+ * 默认的服务提供者实现，用于保存服务端本地的服务实例对象和接口关系
  *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
-public class DefaultServiceRegistry implements ServiceRegistry {
+public class ServiceProviderImpl implements ServiceProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultServiceRegistry.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServiceProviderImpl.class);
 
     // 保存已注册的服务对象的映射表，用 static 确保全局唯一
     private static final Map<String, Object> serviceMap = new ConcurrentHashMap<>();
@@ -30,7 +30,7 @@ public class DefaultServiceRegistry implements ServiceRegistry {
      * 在注册表中注册服务对象
      */
     @Override
-    public synchronized <T> void register(T service) {
+    public synchronized <T> void addServiceProvider(T service) {
         String serviceName = service.getClass().getCanonicalName();
         if (registeredServiceSet.contains(serviceName)) return;
 
@@ -55,7 +55,7 @@ public class DefaultServiceRegistry implements ServiceRegistry {
      * 根据接口名称检索服务对象
      */
     @Override
-    public synchronized Object getService(String serviceName) {
+    public synchronized Object getServiceProvider(String serviceName) {
         Object service = serviceMap.get(serviceName);
         if (service == null) {
             throw new RpcException(ErrorEnum.SERVICE_NOT_FOUND);
