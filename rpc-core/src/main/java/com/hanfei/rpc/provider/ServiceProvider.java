@@ -12,7 +12,7 @@ public interface ServiceProvider {
     /**
      * 将服务实例对象添加到服务提供者
      */
-    <T> void addServiceProvider(T service);
+    <T> void addServiceProvider(T service, Class<T> serviceClass);
 
     /**
      * 根据服务名称获取对应的服务实例对象

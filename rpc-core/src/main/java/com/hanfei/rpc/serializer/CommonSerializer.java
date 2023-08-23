@@ -9,6 +9,12 @@ package com.hanfei.rpc.serializer;
  */
 public interface CommonSerializer {
 
+    Integer KRYO_SERIALIZER = 0;
+
+    Integer JSON_SERIALIZER = 1;
+
+    Integer DEFAULT_SERIALIZER = KRYO_SERIALIZER;
+
     /**
      * 序列化
      */
@@ -18,11 +24,6 @@ public interface CommonSerializer {
      * 反序列化
      */
     Object deserialize(byte[] bytes, Class<?> clazz);
-
-    /**
-     * 获取序列化器的编号
-     */
-    int getCode();
 
     /**
      * 根据编号获取对应的序列化器
@@ -37,4 +38,9 @@ public interface CommonSerializer {
                 return null;
         }
     }
+
+    /**
+     * 获取序列化器的编号
+     */
+    int getCode();
 }

@@ -2,20 +2,21 @@ package com.hanfei.rpc.transport.netty.client;
 
 import com.hanfei.rpc.codec.CommonDecoder;
 import com.hanfei.rpc.codec.CommonEncoder;
-import com.hanfei.rpc.enums.ErrorEnum;
-import com.hanfei.rpc.exception.RpcException;
 import com.hanfei.rpc.serializer.CommonSerializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.Date;
-import java.util.concurrent.CountDownLatch;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,84 +32,83 @@ public class ChannelProvider {
 
     private static EventLoopGroup eventLoopGroup;
 
-    // 初始化 Bootstrap
     private static Bootstrap bootstrap = initializeBootstrap();
 
-    // 最大重试次数
-    private static final int MAX_RETRY_COUNT = 5;
-
-    private static Channel channel = null;
+    private static Map<String, Channel> channels = new ConcurrentHashMap<>();
 
     /**
      * 获取客户端通道
      */
-    public static Channel get(InetSocketAddress inetSocketAddress, CommonSerializer serializer) {
-        // 设置通道初始化器，在连接建立后添加编解码器和处理器
+    public static Channel get(InetSocketAddress inetSocketAddress, CommonSerializer serializer)
+            throws InterruptedException {
+
+        // 构建通道标识，由地址和序列化器编码共同决定
+        String key = inetSocketAddress.toString() + serializer.getCode();
+
+        // 判断是否已存在通道
+        if (channels.containsKey(key)) {
+            Channel channel = channels.get(key);
+            // 若通道存在且处于活动状态，直接返回通道
+            if (channels != null && channel.isActive()) {
+                return channel;
+            } else {
+                // 否则从映射中移除
+                if (channels != null) {
+                    channels.remove(key);
+                }
+            }
+        }
+
+        // 初始化通道的处理器
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) {
-                // 添加自定义序列化编解码器
-                ch.pipeline().addLast(new CommonEncoder(serializer))
+                // 自定义序列化编解码器
+                ch.pipeline()
+                        .addLast(new CommonEncoder(serializer))
+                        // 添加心跳状态处理器，处理空闲状态
+                        .addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS))
                         .addLast(new CommonDecoder())
+                        // 添加客户端处理器，处理通道数据的读写
                         .addLast(new NettyClientHandler());
             }
         });
-
-        // 创建一个倒计数器，等待连接建立完成
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Channel channel = null;
         try {
-            // 连接服务器并等待连接完成
-            connect(bootstrap, inetSocketAddress, countDownLatch);
-            // 阻塞线程，直到倒计数器归零
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            logger.error("获取channel时有错误发生: ", e);
+            // 连接远程服务器，获取通道
+            channel = connect(bootstrap, inetSocketAddress);
+        } catch (ExecutionException e) {
+            logger.error("连接客户端时有错误发生", e);
+            return null;
         }
-        // 返回建立好的通道
+
+        // 将通道添加到映射中，返回获取的通道
+        channels.put(key, channel);
         return channel;
     }
 
     /**
-     * 尝试建立连接，使用默认的最大重试次数
+     * 连接远程服务器，获取通道
      */
-    private static void connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress, CountDownLatch countDownLatch) {
-        connect(bootstrap, inetSocketAddress, MAX_RETRY_COUNT, countDownLatch);
-    }
+    private static Channel connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress)
+            throws ExecutionException, InterruptedException {
 
-    /**
-     * 尝试建立连接，支持指定重试次数
-     *
-     * @param bootstrap         Bootstrap 实例
-     * @param inetSocketAddress 服务器地址
-     * @param retry             当前重试次数
-     * @param countDownLatch    倒计数器，用于等待连接建立完成
-     */
-    private static void connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress, int retry, CountDownLatch countDownLatch) {
-        // 使用 bootstrap 进行连接，并为连接添加监听器
+        // 创建一个CompletableFuture实例，用于异步获取连接结果
+        CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
+
+        // 连接远程服务器，添加连接监听器
         bootstrap.connect(inetSocketAddress).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
                 logger.info("客户端连接成功!");
-                // 获取建立的通道
-                channel = future.channel();
-                // 通知倒计数器减少一个
-                countDownLatch.countDown();
-                return;
+                // 连接成功时，将通道放入 CompletableFuture 中
+                completableFuture.complete(future.channel());
+            } else {
+                throw new IllegalStateException();
             }
-            if (retry == 0) {
-                logger.error("客户端连接失败:重试次数已用完，放弃连接！");
-                // 通知倒计数器减少一个
-                countDownLatch.countDown();
-                throw new RpcException(ErrorEnum.CLIENT_CONNECT_SERVER_FAILURE);
-            }
-            // 计算第几次重连
-            int order = (MAX_RETRY_COUNT - retry) + 1;
-            // 计算本次重连的间隔，采用指数退避算法
-            int delay = 1 << order;
-            logger.error("{}: 连接失败，第 {} 次重连……", new Date(), order);
-            // 使用线程池调度，延时进行下一次连接尝试
-            bootstrap.config().group().schedule(() -> connect(bootstrap, inetSocketAddress,
-                    retry - 1, countDownLatch), delay, TimeUnit.SECONDS);
         });
+
+        // 等待连接结果并返回通道
+        return completableFuture.get();
     }
 
     /**

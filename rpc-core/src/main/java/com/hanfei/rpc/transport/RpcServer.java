@@ -11,18 +11,9 @@ import com.hanfei.rpc.serializer.CommonSerializer;
  */
 public interface RpcServer {
 
-    /**
-     * 启动服务
-     */
+    int DEFAULT_SERIALIZER = CommonSerializer.KRYO_SERIALIZER;
+
     void start();
 
-    /**
-     * 设置序列化器
-     */
-    void setSerializer(CommonSerializer serializer);
-
-    /**
-     * 发布服务
-     */
-    <T> void publishService(Object service, Class<T> serviceClass);
+    <T> void publishService(T service, Class<T> serviceClass);
 }

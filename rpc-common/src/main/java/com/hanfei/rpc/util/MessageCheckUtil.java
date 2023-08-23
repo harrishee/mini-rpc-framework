@@ -15,22 +15,21 @@ import org.slf4j.LoggerFactory;
  * @time: 2023
  * @summary: harris-rpc-framework
  */
-public class RpcMessageChecker {
+public class MessageCheckUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(RpcMessageChecker.class);
+    private static final Logger logger = LoggerFactory.getLogger(MessageCheckUtil.class);
 
     // 请求中接口名称的键
     public static final String INTERFACE_NAME = "interfaceName";
 
     // 私有构造函数，不允许实例化该工具类
-    private RpcMessageChecker() {
+    private MessageCheckUtil() {
     }
 
     /**
      * 校验 RPC 请求和响应是否合法
      */
     public static void check(RpcRequest rpcRequest, RpcResponse rpcResponse) {
-        // 校验响应是否为 null
         if (rpcResponse == null) {
             logger.error("调用服务失败，serviceName: {}", rpcRequest.getInterfaceName());
             throw new RpcException(ErrorEnum.SERVICE_INVOCATION_FAILURE, INTERFACE_NAME + ":"

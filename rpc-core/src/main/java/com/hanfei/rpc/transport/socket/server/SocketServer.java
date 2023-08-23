@@ -1,15 +1,16 @@
 package com.hanfei.rpc.transport.socket.server;
 
-import com.hanfei.rpc.handler.RequestHandler;
-import com.hanfei.rpc.transport.RpcServer;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
+import com.hanfei.rpc.handler.RequestHandler;
+import com.hanfei.rpc.hook.ShutdownHook;
 import com.hanfei.rpc.provider.ServiceProvider;
 import com.hanfei.rpc.provider.ServiceProviderImpl;
 import com.hanfei.rpc.registry.NacosServiceRegistry;
 import com.hanfei.rpc.registry.ServiceRegistry;
 import com.hanfei.rpc.serializer.CommonSerializer;
-import com.hanfei.rpc.util.ThreadPoolFactory;
+import com.hanfei.rpc.transport.RpcServer;
+import com.hanfei.rpc.factory.ThreadPoolFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,57 +32,40 @@ public class SocketServer implements RpcServer {
 
     private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
 
-    // 线程池实例
-    private final ExecutorService threadPool;
-
-    // 请求处理器
-    private RequestHandler requestHandler = new RequestHandler();
-
-    // 服务注册表
-    private final ServiceProvider serviceProvider;
-
-    // 服务注册中心
-    private final ServiceRegistry serviceRegistry;
-
-    // 服务器主机名
     private final String host;
 
-    // 服务器端口号
     private final int port;
 
-    // 序列化器
-    private CommonSerializer serializer;
+    private final ExecutorService threadPool;
 
-    /**
-     * 构造函数
-     */
-    public SocketServer(String host, int port) {
+    private final CommonSerializer serializer;
+
+    private final RequestHandler requestHandler = new RequestHandler();
+
+    private final ServiceRegistry serviceRegistry;
+
+    private final ServiceProvider serviceProvider;
+
+    public SocketServer(String host, int port, Integer serializer) {
         this.host = host;
         this.port = port;
         threadPool = ThreadPoolFactory.createDefaultThreadPool("socket-rpc-server");
         this.serviceRegistry = new NacosServiceRegistry();
         this.serviceProvider = new ServiceProviderImpl();
+        this.serializer = CommonSerializer.getByCode(serializer);
     }
 
-    /**
-     * 启动服务器，监听指定端口
-     */
     @Override
     public void start() {
-        // 创建 ServerSocket 对象并绑定到指定端口
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            logger.info("Socket Server Starts...");
+        try (ServerSocket serverSocket = new ServerSocket()) {
+            serverSocket.bind(new InetSocketAddress(host, port));
+            logger.info("服务器启动……");
+            ShutdownHook.getShutdownHook().addClearAllHook();
             Socket socket;
-
-            // 持续监听客户端连接
             while ((socket = serverSocket.accept()) != null) {
-                logger.info("Socket Client Connected: {}:{}", socket.getInetAddress(), socket.getPort());
-
-                // 在线程池中执行请求处理线程
-                logger.info("开始执行请求处理线程...");
-                threadPool.execute(new RequestHandlerThread(socket, requestHandler, serviceRegistry, serializer));
+                logger.info("消费者连接: {}:{}", socket.getInetAddress(), socket.getPort());
+                threadPool.execute(new RequestHandlerThread(socket, requestHandler, serializer));
             }
-            // 关闭线程池
             threadPool.shutdown();
         } catch (IOException e) {
             logger.error("服务器启动时有错误发生:", e);
@@ -89,17 +73,12 @@ public class SocketServer implements RpcServer {
     }
 
     @Override
-    public void setSerializer(CommonSerializer serializer) {
-        this.serializer = serializer;
-    }
-
-    @Override
-    public <T> void publishService(Object service, Class<T> serviceClass) {
+    public <T> void publishService(T service, Class<T> serviceClass) {
         if (serializer == null) {
             logger.error("未设置序列化器");
             throw new RpcException(ErrorEnum.SERIALIZER_NOT_FOUND);
         }
-        serviceProvider.addServiceProvider(service);
+        serviceProvider.addServiceProvider(service, serviceClass);
         serviceRegistry.register(serviceClass.getCanonicalName(), new InetSocketAddress(host, port));
         start();
     }

@@ -1,7 +1,7 @@
 package com.hanfei.test;
 
 import com.hanfei.rpc.api.CalculateService;
-import com.hanfei.rpc.serializer.KryoSerializer;
+import com.hanfei.rpc.serializer.CommonSerializer;
 import com.hanfei.rpc.transport.RpcClient;
 import com.hanfei.rpc.transport.RpcClientProxy;
 import com.hanfei.rpc.transport.netty.client.NettyClient;
@@ -14,8 +14,7 @@ import com.hanfei.rpc.transport.netty.client.NettyClient;
 public class NettyTestClient {
 
     public static void main(String[] args) {
-        RpcClient client = new NettyClient();
-        client.setSerializer(new KryoSerializer());
+        RpcClient client = new NettyClient(CommonSerializer.KRYO_SERIALIZER);
         RpcClientProxy proxy = new RpcClientProxy(client);
 
         // 通过代理获取服务的远程调用接口，并调用方法

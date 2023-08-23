@@ -1,7 +1,7 @@
 package com.hanfei.test;
 
 import com.hanfei.rpc.api.CalculateService;
-import com.hanfei.rpc.serializer.KryoSerializer;
+import com.hanfei.rpc.serializer.CommonSerializer;
 import com.hanfei.rpc.transport.RpcClientProxy;
 import com.hanfei.rpc.transport.socket.client.SocketClient;
 
@@ -15,8 +15,7 @@ import com.hanfei.rpc.transport.socket.client.SocketClient;
 public class SocketTestClient {
 
     public static void main(String[] args) {
-        SocketClient client = new SocketClient();
-        client.setSerializer(new KryoSerializer());
+        SocketClient client = new SocketClient(CommonSerializer.KRYO_SERIALIZER);
         RpcClientProxy proxy = new RpcClientProxy(client);
 
         // 通过代理获取服务的远程调用接口，并调用方法

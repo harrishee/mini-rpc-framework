@@ -12,13 +12,7 @@ import com.hanfei.rpc.serializer.CommonSerializer;
  */
 public interface RpcClient {
 
-    /**
-     * 发送请求
-     */
-    Object sendRequest(RpcRequest rpcRequest);
+    int DEFAULT_SERIALIZER = CommonSerializer.KRYO_SERIALIZER;
 
-    /**
-     * 设置序列化器
-     */
-    void setSerializer(CommonSerializer serializer);
+    Object sendRequest(RpcRequest rpcRequest);
 }
