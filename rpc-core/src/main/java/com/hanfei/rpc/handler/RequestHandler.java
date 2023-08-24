@@ -32,32 +32,23 @@ public class RequestHandler {
      * 处理客户端请求并调用服务方法
      */
     public Object handle(RpcRequest rpcRequest) {
-        Object result = null;
         Object service = serviceProvider.getServiceProvider(rpcRequest.getInterfaceName());
-        try {
-            // 调用 invokeTargetMethod 方法，执行具体的服务调用
-            result = invokeTargetMethod(rpcRequest, service);
-            logger.info("服务: {} 成功调用方法: {}，获得结果: {}", rpcRequest.getInterfaceName(), rpcRequest.getMethodName(), result);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            logger.error("调用或发送时有错误发生：", e);
-        }
-        return result;
+        return invokeTargetMethod(rpcRequest, service);
     }
 
     /**
      * 根据 RpcRequest 调用服务对象的方法
      */
-    private Object invokeTargetMethod(RpcRequest rpcRequest, Object service)
-            throws IllegalAccessException, InvocationTargetException {
-        Method method;
+    private Object invokeTargetMethod(RpcRequest rpcRequest, Object service) {
+        Object result;
         try {
-            // 通过反射获取服务对象的方法
-            method = service.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());
-        } catch (NoSuchMethodException e) {
+            Method method = service.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());
+            logger.info("开始调用方法: {}，参数: {}", rpcRequest.getMethodName(), rpcRequest.getParameters());
+            result = method.invoke(service, rpcRequest.getParameters());
+            logger.info("服务:{} 成功调用方法:{}", rpcRequest.getInterfaceName(), rpcRequest.getMethodName());
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             return RpcResponse.error(ResponseEnum.METHOD_NOT_FOUND, rpcRequest.getRequestId());
         }
-        // 通过反射调用目标方法，并返回方法的执行结果
-        logger.info("开始调用方法: {}，参数: {}", rpcRequest.getMethodName(), rpcRequest.getParameters());
-        return method.invoke(service, rpcRequest.getParameters());
+        return result;
     }
 }

@@ -1,8 +1,8 @@
-package com.hanfei.test.ServiceImpl;
+package com.hanfei.test.serviceImpl;
 
+import com.hanfei.rpc.annotation.Service;
 import com.hanfei.rpc.api.HelloObject;
 import com.hanfei.rpc.api.HelloService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Service
 public class HelloServiceImpl implements HelloService {
 
     private static final Logger logger = LoggerFactory.getLogger(HelloServiceImpl.class);

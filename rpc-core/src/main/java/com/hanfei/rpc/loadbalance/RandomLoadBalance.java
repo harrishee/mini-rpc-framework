@@ -1,4 +1,4 @@
-package com.hanfei.rpc.loadbalancer;
+package com.hanfei.rpc.loadbalance;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
 
@@ -10,7 +10,7 @@ import java.util.Random;
  * @time: 2023
  * @summary: harris-rpc-framework
  */
-public class RandomLoadBalancer implements LoadBalancer {
+public class RandomLoadBalance implements LoadBalance {
 
     @Override
     public Instance select(List<Instance> instances) {

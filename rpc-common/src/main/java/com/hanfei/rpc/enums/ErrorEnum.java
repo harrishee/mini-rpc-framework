@@ -32,7 +32,11 @@ public enum ErrorEnum {
 
     REGISTER_SERVICE_FAILED("注册服务失败"),
 
-    CLIENT_CONNECT_SERVER_FAILURE("客户端连接服务端失败");
+    CLIENT_CONNECT_SERVER_FAILURE("客户端连接服务端失败"),
+
+    UNKNOWN_ERROR("出现未知错误"),
+
+    SERVICE_SCAN_PACKAGE_NOT_FOUND("启动类 serviceScan 注解缺失");
 
     private final String message;
 }

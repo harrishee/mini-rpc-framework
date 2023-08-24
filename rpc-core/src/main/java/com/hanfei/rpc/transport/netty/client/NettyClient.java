@@ -4,11 +4,11 @@ import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.entity.RpcResponse;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
-import com.hanfei.rpc.loadbalancer.LoadBalancer;
-import com.hanfei.rpc.loadbalancer.RandomLoadBalancer;
-import com.hanfei.rpc.registry.NacosServiceDiscovery;
+import com.hanfei.rpc.loadbalance.LoadBalance;
+import com.hanfei.rpc.loadbalance.RandomLoadBalance;
+import com.hanfei.rpc.registry.nacos.NacosServiceDiscovery;
 import com.hanfei.rpc.registry.ServiceDiscovery;
-import com.hanfei.rpc.serializer.CommonSerializer;
+import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.transport.RpcClient;
 import com.hanfei.rpc.factory.SingletonFactory;
 import io.netty.bootstrap.Bootstrap;
@@ -36,11 +36,13 @@ public class NettyClient implements RpcClient {
 
     private final ServiceDiscovery serviceDiscovery;
 
-    private CommonSerializer serializer;
+    private final CommonSerializer serializer;
 
     private static final EventLoopGroup group;
 
     private static final Bootstrap bootstrap;
+
+    private final UnprocessedRequests unprocessedRequests;
 
     static {
         group = new NioEventLoopGroup();
@@ -48,32 +50,18 @@ public class NettyClient implements RpcClient {
         bootstrap.group(group).channel(NioSocketChannel.class);
     }
 
-    private final UnprocessedRequests unprocessedRequests;
-
-    public NettyClient() {
-        this(DEFAULT_SERIALIZER, new RandomLoadBalancer());
-    }
-
-    public NettyClient(LoadBalancer loadBalancer) {
-        this(DEFAULT_SERIALIZER, loadBalancer);
-    }
-
     public NettyClient(Integer serializer) {
-        this(serializer, new RandomLoadBalancer());
+        this(serializer, new RandomLoadBalance());
     }
 
-    public NettyClient(Integer serializer, LoadBalancer loadBalancer) {
-        this.serviceDiscovery = new NacosServiceDiscovery(loadBalancer);
+    public NettyClient(Integer serializer, LoadBalance loadBalance) {
+        this.serviceDiscovery = new NacosServiceDiscovery(loadBalance);
         this.serializer = CommonSerializer.getByCode(serializer);
         this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
     }
 
-    /**
-     * 发送 RPC 请求，并异步获取响应结果
-     */
     @Override
     public CompletableFuture<RpcResponse> sendRequest(RpcRequest rpcRequest) {
-        // 检查序列化器是否设置
         if (serializer == null) {
             logger.error("未设置序列化器");
             throw new RpcException(ErrorEnum.SERIALIZER_NOT_FOUND);

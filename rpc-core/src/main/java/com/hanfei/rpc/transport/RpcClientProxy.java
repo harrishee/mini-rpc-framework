@@ -69,12 +69,12 @@ public class RpcClientProxy implements InvocationHandler {
         );
         RpcResponse rpcResponse = null;
 
-        // 根据客户端类型，采用不同的方式发送请求并获取响应
+        // 如果是 Netty 客户端，使用 CompletableFuture 异步发送请求，并等待响应
         if (client instanceof NettyClient) {
-            // 如果是 Netty 客户端，使用 CompletableFuture 异步发送请求，并等待响应
-            CompletableFuture<RpcResponse> completableFuture = (CompletableFuture<RpcResponse>) client.sendRequest(rpcRequest);
             try {
                 // 获取异步响应结果
+                CompletableFuture<RpcResponse> completableFuture =
+                        (CompletableFuture<RpcResponse>) client.sendRequest(rpcRequest);
                 rpcResponse = completableFuture.get();
             } catch (InterruptedException | ExecutionException e) {
                 logger.error("方法调用请求发送失败", e);

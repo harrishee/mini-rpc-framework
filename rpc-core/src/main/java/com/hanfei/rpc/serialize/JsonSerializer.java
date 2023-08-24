@@ -1,4 +1,4 @@
-package com.hanfei.rpc.serializer;
+package com.hanfei.rpc.serialize;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,27 +25,19 @@ public class JsonSerializer implements CommonSerializer {
      */
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * 将对象序列化为 JSON 字节数组
-     */
     @Override
     public byte[] serialize(Object obj) {
         try {
-            // 将对象序列化为 JSON 字符串
             return objectMapper.writeValueAsBytes(obj);
         } catch (JsonProcessingException e) {
-            logger.error("序列化时有错误发生: {}", e.getMessage());
+            logger.error("序列化时发生错误: {}", e.getMessage());
             return null;
         }
     }
 
-    /**
-     * 将 JSON 字节数组反序列化为指定类型的对象
-     */
     @Override
     public Object deserialize(byte[] bytes, Class<?> clazz) {
         try {
-            // 将 JSON 字节数组反序列化为对象
             Object obj = objectMapper.readValue(bytes, clazz);
 
             // 如果反序列化的对象是 请求 类型，则需要处理参数类型匹配的问题
@@ -54,7 +46,7 @@ public class JsonSerializer implements CommonSerializer {
             }
             return obj;
         } catch (IOException e) {
-            logger.error("反序列化时有错误发生: {}", e.getMessage());
+            logger.error("反序列化时发生错误: {}", e.getMessage());
             return null;
         }
     }
@@ -80,13 +72,9 @@ public class JsonSerializer implements CommonSerializer {
                 rpcRequest.getParameters()[i] = objectMapper.readValue(bytes, clazz);
             }
         }
-        // 返回经过处理的 请求对象
         return rpcRequest;
     }
 
-    /**
-     * 获取序列化器的编号，这里返回 JSON 序列化器的编号
-     */
     @Override
     public int getCode() {
         return SerializerEnum.valueOf("JSON").getCode();

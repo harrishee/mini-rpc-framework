@@ -77,3 +77,6 @@ Harris RPC 框架是一个基于 Java 的轻量级 RPC 框架，旨在帮助实�
 
 ### 6. feat: load balance
 引入了负载均衡机制，实现了简易的随机负载均衡和轮转负载均衡
+
+### 7. feat: auto service registration
+引入了自动服务注册机制，使得服务的注册更加方便，启动服务器时无需手动注册服务

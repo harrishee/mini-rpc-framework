@@ -18,26 +18,21 @@ public class ThreadPoolFactory {
 
     private final static Logger logger = LoggerFactory.getLogger(ThreadPoolFactory.class);
 
-    /**
-     * 线程池参数
-     */
+    // 线程池参数
     private static final int CORE_POOL_SIZE = 10;
-
     private static final int MAXIMUM_POOL_SIZE_SIZE = 100;
-
     private static final int KEEP_ALIVE_TIME = 1;
-
     private static final int BLOCKING_QUEUE_CAPACITY = 100;
 
-    // 用于存储各个线程池的映射关系
+    // 每个线程池都可以通过一个唯一的名称进行标识
     private static Map<String, ExecutorService> threadPoolsMap = new ConcurrentHashMap<>();
 
-    // 私有构造函数，不允许实例化该工具类
+    // 私有构造函数，防止实例化
     private ThreadPoolFactory() {
     }
 
     /**
-     * 默认创建线程池，不创建守护线程
+     * 不创建守护线程
      */
     public static ExecutorService createDefaultThreadPool(String threadNamePrefix) {
         return createDefaultThreadPool(threadNamePrefix, false);
@@ -47,14 +42,16 @@ public class ThreadPoolFactory {
      * 创建线程池，并可以选择是否创建守护线程
      */
     public static ExecutorService createDefaultThreadPool(String threadNamePrefix, Boolean daemon) {
-        ExecutorService pool = threadPoolsMap.computeIfAbsent(threadNamePrefix, k -> createThreadPool(threadNamePrefix, daemon));
+        // 从映射中获取具有指定前缀的线程池，如果不存在则创建新线程池
+        ExecutorService pool = threadPoolsMap.computeIfAbsent(threadNamePrefix, k ->
+                createThreadPool(threadNamePrefix, daemon));
+        
         if (pool.isShutdown() || pool.isTerminated()) {
             threadPoolsMap.remove(threadNamePrefix);
             pool = createThreadPool(threadNamePrefix, daemon);
             threadPoolsMap.put(threadNamePrefix, pool);
         }
         return pool;
-
     }
 
     /**

@@ -1,16 +1,12 @@
 package com.hanfei.rpc.transport.netty.server;
 
-import com.hanfei.rpc.codec.CommonDecoder;
-import com.hanfei.rpc.codec.CommonEncoder;
-import com.hanfei.rpc.enums.ErrorEnum;
-import com.hanfei.rpc.exception.RpcException;
+import com.hanfei.rpc.transport.netty.codec.CommonDecoder;
+import com.hanfei.rpc.transport.netty.codec.CommonEncoder;
 import com.hanfei.rpc.hook.ShutdownHook;
-import com.hanfei.rpc.provider.ServiceProvider;
 import com.hanfei.rpc.provider.ServiceProviderImpl;
-import com.hanfei.rpc.registry.NacosServiceRegistry;
-import com.hanfei.rpc.registry.ServiceRegistry;
-import com.hanfei.rpc.serializer.CommonSerializer;
-import com.hanfei.rpc.transport.RpcServer;
+import com.hanfei.rpc.registry.nacos.NacosServiceRegistry;
+import com.hanfei.rpc.serialize.CommonSerializer;
+import com.hanfei.rpc.transport.AbstractRpcServer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -18,10 +14,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.netty.handler.timeout.IdleStateHandler;
 
-import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Netty 服务端
@@ -30,17 +25,7 @@ import java.net.InetSocketAddress;
  * @time: 2023
  * @summary: harris-rpc-framework
  */
-public class NettyServer implements RpcServer {
-
-    private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
-
-    private final String host;
-
-    private final int port;
-
-    private final ServiceRegistry serviceRegistry;
-
-    private final ServiceProvider serviceProvider;
+public class NettyServer extends AbstractRpcServer {
 
     private CommonSerializer serializer;
 
@@ -50,6 +35,8 @@ public class NettyServer implements RpcServer {
         serviceRegistry = new NacosServiceRegistry();
         serviceProvider = new ServiceProviderImpl();
         this.serializer = CommonSerializer.getByCode(serializer);
+
+        serviceScan();
     }
 
     @Override
@@ -71,12 +58,10 @@ public class NettyServer implements RpcServer {
                         @Override
                         protected void initChannel(SocketChannel ch) {
                             ChannelPipeline pipeline = ch.pipeline();
-                            // 1 添加数据编码器 CommonEncoder
-                            pipeline.addLast(new CommonEncoder(serializer));
-                            // 2 添加数据解码器 CommonDecoder，用于将接收到的数据进行解码
-                            pipeline.addLast(new CommonDecoder());
-                            // 3 添加业务逻辑处理器 NettyServerHandler
-                            pipeline.addLast(new NettyServerHandler());
+                            pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS))
+                                    .addLast(new CommonEncoder(serializer))
+                                    .addLast(new CommonDecoder())
+                                    .addLast(new NettyServerHandler());
                         }
                     });
 
@@ -91,19 +76,5 @@ public class NettyServer implements RpcServer {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
-    }
-
-    @Override
-    public <T> void publishService(T service, Class<T> serviceClass) {
-        if (serializer == null) {
-            logger.error("未设置序列化器");
-            throw new RpcException(ErrorEnum.SERIALIZER_NOT_FOUND);
-        }
-
-        serviceProvider.addServiceProvider(service, serviceClass);
-        serviceRegistry.register(serviceClass.getCanonicalName(), new InetSocketAddress(host, port));
-
-        // 注册完一个服务后直接调用 start() 方法，所以一个服务端只能注册一个服务，下次更改 TODO
-        start();
     }
 }

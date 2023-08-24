@@ -2,7 +2,7 @@ package com.hanfei.rpc.transport.socket.utils;
 
 import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.enums.PackageTypeEnum;
-import com.hanfei.rpc.serializer.CommonSerializer;
+import com.hanfei.rpc.serialize.CommonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

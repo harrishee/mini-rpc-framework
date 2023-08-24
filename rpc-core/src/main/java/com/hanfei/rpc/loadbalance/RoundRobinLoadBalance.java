@@ -1,4 +1,4 @@
-package com.hanfei.rpc.loadbalancer;
+package com.hanfei.rpc.loadbalance;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
 
@@ -9,7 +9,7 @@ import java.util.List;
  * @time: 2023
  * @summary: harris-rpc-framework
  */
-public class RoundRobinLoadBalancer implements LoadBalancer {
+public class RoundRobinLoadBalance implements LoadBalance {
 
     private int index = 0;
 

@@ -2,7 +2,7 @@ package com.hanfei.rpc.transport.netty.client;
 
 import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.entity.RpcResponse;
-import com.hanfei.rpc.serializer.CommonSerializer;
+import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.factory.SingletonFactory;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -37,23 +37,14 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse>
      * 处理传入的 RpcResponse 消息，当通道读取到 RpcResponse 消息时，会自动调用该方法进行处理
      */
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RpcResponse msg) {
+    protected void channelRead0(ChannelHandlerContext ctx, RpcResponse req) {
         try {
-            logger.info("客户端接收到消息: {}", msg);
-            unprocessedRequests.complete(msg);
+            logger.info("客户端接收到消息: {}", req);
+            unprocessedRequests.complete(req);
         } finally {
             // 释放消息资源
-            ReferenceCountUtil.release(msg);
+            ReferenceCountUtil.release(req);
         }
-    }
-
-    /**
-     * 处理异常情况
-     */
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("过程调用时有错误发生: {}", cause.getMessage());
-        ctx.close();
     }
 
     /**
@@ -67,7 +58,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse>
             IdleState state = ((IdleStateEvent) event).state();
             // 判断状态是否为 WRITER_IDLE，若是，则发送心跳包
             if (state == IdleState.WRITER_IDLE) {
-                logger.info("发送心跳包 [{}]", ctx.channel().remoteAddress());
+                logger.info("Sending heartbeat to server [{}]", ctx.channel().remoteAddress());
 
                 // 获取连接通道
                 Channel channel = ChannelProvider.get((InetSocketAddress) ctx.channel().remoteAddress(),
@@ -82,5 +73,11 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse>
             // 若不是心跳包事件，则调用父类方法继续处理
             super.userEventTriggered(ctx, event);
         }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        logger.error("过程调用时有错误发生: {}", cause.getMessage());
+        ctx.close();
     }
 }

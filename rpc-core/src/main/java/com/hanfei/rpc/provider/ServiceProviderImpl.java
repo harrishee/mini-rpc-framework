@@ -24,32 +24,24 @@ public class ServiceProviderImpl implements ServiceProvider {
 
     private static final Set<String> registeredServiceSet = ConcurrentHashMap.newKeySet();
 
-    /**
-     * 在注册表中注册服务对象
-     */
     @Override
-    public <T> void addServiceProvider(T service, Class<T> serviceClass) {
-        String serviceName = serviceClass.getCanonicalName();
-        if (registeredServiceSet.contains(serviceName)) return;
-
-
+    public <T> void addServiceProvider(T service, String serviceName) {
+        if (registeredServiceSet.contains(serviceName)) {
+            return;
+        }
         registeredServiceSet.add(serviceName);
         serviceMap.put(serviceName, service);
-
-        logger.info("向接口: {} 注册服务: {}，目前 serviceMap: {}, registeredServiceSet: {}",
-                service.getClass().getInterfaces(), serviceName, serviceMap, registeredServiceSet);
+        logger.info("向接口: {} 注册服务: {}", service.getClass().getInterfaces(), serviceName);
     }
 
-    /**
-     * 根据接口名称检索服务对象
-     */
     @Override
-    public synchronized Object getServiceProvider(String serviceName) {
+    public Object getServiceProvider(String serviceName) {
         Object service = serviceMap.get(serviceName);
         if (service == null) {
+            logger.error("找不到对应的服务: " + serviceName);
             throw new RpcException(ErrorEnum.SERVICE_NOT_FOUND);
         }
-        logger.info("获取服务: {} 成功，响应: {}", serviceName, service);
+        logger.info("获取服务: {} 成功，service: {}", serviceName, service);
         return service;
     }
 }

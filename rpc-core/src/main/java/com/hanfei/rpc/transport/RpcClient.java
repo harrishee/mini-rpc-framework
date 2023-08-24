@@ -1,7 +1,7 @@
 package com.hanfei.rpc.transport;
 
 import com.hanfei.rpc.entity.RpcRequest;
-import com.hanfei.rpc.serializer.CommonSerializer;
+import com.hanfei.rpc.serialize.CommonSerializer;
 
 /**
  * client 通用接口

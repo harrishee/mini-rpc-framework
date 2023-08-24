@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
+ * 响应对象
+ *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
@@ -31,7 +33,7 @@ public class RpcResponse<T> implements Serializable {
     private Integer statusCode;
 
     /**
-     * 响应消息
+     * 响应补充消息
      */
     private String message;
 

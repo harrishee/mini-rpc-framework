@@ -1,4 +1,4 @@
-package com.hanfei.rpc.loadbalancer;
+package com.hanfei.rpc.loadbalance;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
 
@@ -11,7 +11,7 @@ import java.util.List;
  * @time: 2023
  * @summary: harris-rpc-framework
  */
-public interface LoadBalancer {
+public interface LoadBalance {
 
     /**
      * 从实例列表中选择下一个要调用的实例

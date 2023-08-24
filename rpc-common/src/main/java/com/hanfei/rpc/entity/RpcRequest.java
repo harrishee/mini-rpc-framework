@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
+ * 请求对象
+ *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework

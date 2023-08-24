@@ -33,29 +33,24 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
      * 处理客户端发送的 请求对象
      */
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RpcRequest msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, RpcRequest req) {
         try {
-            if (msg.getHeartBeat()) {
-                logger.info("接收到客户端心跳包...");
+            if (req.getHeartBeat()) {
+                logger.info("Receiving heartbeat from client: {}", ctx.channel().remoteAddress());
                 return;
             }
 
-            logger.info("服务器接收到请求: {}", msg);
-            Object result = requestHandler.handle(msg);
+            logger.info("服务器接收到请求: {}", req);
+            Object result = requestHandler.handle(req);
+
             if (ctx.channel().isActive() && ctx.channel().isWritable()) {
-                ctx.writeAndFlush(RpcResponse.success(result, msg.getRequestId()));
+                ctx.writeAndFlush(RpcResponse.success(result, req.getRequestId()));
             } else {
                 logger.error("通道不可写");
             }
         } finally {
-            ReferenceCountUtil.release(msg);
+            ReferenceCountUtil.release(req);
         }
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("处理过程调用时有错误发生: {}", cause.getMessage());
-        ctx.close();
     }
 
     @Override
@@ -69,5 +64,11 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
         } else {
             super.userEventTriggered(ctx, evt);
         }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        logger.error("处理过程调用时有错误发生: {}", cause.getMessage());
+        ctx.close();
     }
 }

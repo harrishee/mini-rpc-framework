@@ -39,7 +39,6 @@ public class NacosUtil {
     private static final String SERVER_ADDR = "127.0.0.1:8848";
 
     static {
-        // 初始化 Nacos 服务发现客户端
         namingService = getNacosNamingService();
     }
 

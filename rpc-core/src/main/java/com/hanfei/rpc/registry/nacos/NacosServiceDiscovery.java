@@ -1,9 +1,12 @@
-package com.hanfei.rpc.registry;
+package com.hanfei.rpc.registry.nacos;
 
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.hanfei.rpc.loadbalancer.LoadBalancer;
-import com.hanfei.rpc.loadbalancer.RandomLoadBalancer;
+import com.hanfei.rpc.enums.ErrorEnum;
+import com.hanfei.rpc.exception.RpcException;
+import com.hanfei.rpc.loadbalance.LoadBalance;
+import com.hanfei.rpc.loadbalance.RandomLoadBalance;
+import com.hanfei.rpc.registry.ServiceDiscovery;
 import com.hanfei.rpc.util.NacosUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +22,13 @@ import java.util.List;
 public class NacosServiceDiscovery implements ServiceDiscovery {
     private static final Logger logger = LoggerFactory.getLogger(NacosServiceDiscovery.class);
 
-    private final LoadBalancer loadBalancer;
+    private final LoadBalance loadBalance;
 
-    public NacosServiceDiscovery(LoadBalancer loadBalancer) {
-        if (loadBalancer == null) {
-            this.loadBalancer = new RandomLoadBalancer();
+    public NacosServiceDiscovery(LoadBalance loadBalance) {
+        if (loadBalance == null) {
+            this.loadBalance = new RandomLoadBalance();
         } else {
-            this.loadBalancer = loadBalancer;
+            this.loadBalance = loadBalance;
         }
     }
 
@@ -33,10 +36,14 @@ public class NacosServiceDiscovery implements ServiceDiscovery {
     public InetSocketAddress lookupService(String serviceName) {
         try {
             List<Instance> instances = NacosUtil.getAllInstance(serviceName);
-            Instance instance = loadBalancer.select(instances);
+            if(instances.isEmpty()) {
+                logger.error("找不到对应的服务: " + serviceName);
+                throw new RpcException(ErrorEnum.SERVICE_NOT_FOUND);
+            }
+            Instance instance = loadBalance.select(instances);
             return new InetSocketAddress(instance.getIp(), instance.getPort());
         } catch (NacosException e) {
-            logger.error("获取服务时有错误发生: ", e);
+            logger.error("获取服务时发生错误: ", e);
         }
         return null;
     }

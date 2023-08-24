@@ -8,4 +8,6 @@ package com.hanfei.rpc.api;
 public interface CalculateService {
 
     String addNums(int a, int b, String message);
+
+    String mulNums(int a, int b, String message);
 }

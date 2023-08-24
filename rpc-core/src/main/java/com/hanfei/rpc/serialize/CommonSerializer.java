@@ -1,4 +1,4 @@
-package com.hanfei.rpc.serializer;
+package com.hanfei.rpc.serialize;
 
 /**
  * 通用序列化接口，用于将对象序列化为字节数组，以及将字节数组反序列化为对象

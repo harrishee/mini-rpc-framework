@@ -5,11 +5,11 @@ import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.entity.RpcResponse;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
-import com.hanfei.rpc.loadbalancer.LoadBalancer;
-import com.hanfei.rpc.loadbalancer.RandomLoadBalancer;
-import com.hanfei.rpc.registry.NacosServiceDiscovery;
+import com.hanfei.rpc.loadbalance.LoadBalance;
+import com.hanfei.rpc.loadbalance.RandomLoadBalance;
+import com.hanfei.rpc.registry.nacos.NacosServiceDiscovery;
 import com.hanfei.rpc.registry.ServiceDiscovery;
-import com.hanfei.rpc.serializer.CommonSerializer;
+import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.transport.RpcClient;
 import com.hanfei.rpc.transport.socket.utils.ObjectReader;
 import com.hanfei.rpc.transport.socket.utils.ObjectWriter;
@@ -34,17 +34,17 @@ public class SocketClient implements RpcClient {
 
     private static final Logger logger = LoggerFactory.getLogger(SocketClient.class);
 
-    private final ServiceDiscovery serviceDiscovery;
-
     private final CommonSerializer serializer;
 
+    private final ServiceDiscovery serviceDiscovery;
+
     public SocketClient(Integer serializer) {
-        this(serializer, new RandomLoadBalancer());
+        this(serializer, new RandomLoadBalance());
     }
 
-    public SocketClient(Integer serializer, LoadBalancer loadBalancer) {
-        this.serviceDiscovery = new NacosServiceDiscovery(loadBalancer);
+    public SocketClient(Integer serializer, LoadBalance loadBalance) {
         this.serializer = CommonSerializer.getByCode(serializer);
+        this.serviceDiscovery = new NacosServiceDiscovery(loadBalance);
     }
 
     @Override
@@ -69,12 +69,10 @@ public class SocketClient implements RpcClient {
             Object obj = ObjectReader.readObject(inputStream);
             RpcResponse rpcResponse = (RpcResponse) obj;
 
-            // 检查响应的有效性
             if (rpcResponse == null) {
                 logger.error("服务调用失败，service：{}", rpcRequest.getInterfaceName());
                 throw new RpcException(ErrorEnum.SERVICE_INVOCATION_FAILURE, " service:" + rpcRequest.getInterfaceName());
             }
-            // 检查响应状态码
             if (rpcResponse.getStatusCode() == null || rpcResponse.getStatusCode() != ResponseCode.SUCCESS.getCode()) {
                 logger.error("调用服务失败, service: {}, response:{}", rpcRequest.getInterfaceName(), rpcResponse);
                 throw new RpcException(ErrorEnum.SERVICE_INVOCATION_FAILURE, " service:" + rpcRequest.getInterfaceName());

@@ -1,6 +1,6 @@
 package com.hanfei.rpc.transport;
 
-import com.hanfei.rpc.serializer.CommonSerializer;
+import com.hanfei.rpc.serialize.CommonSerializer;
 
 /**
  * server 通用接口
@@ -15,5 +15,5 @@ public interface RpcServer {
 
     void start();
 
-    <T> void publishService(T service, Class<T> serviceClass);
+    <T> void publishService(T service, String serviceName);
 }

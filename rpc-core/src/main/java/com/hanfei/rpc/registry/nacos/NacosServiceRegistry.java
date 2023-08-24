@@ -1,8 +1,9 @@
-package com.hanfei.rpc.registry;
+package com.hanfei.rpc.registry.nacos;
 
 import com.alibaba.nacos.api.exception.NacosException;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
+import com.hanfei.rpc.registry.ServiceRegistry;
 import com.hanfei.rpc.util.NacosUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,10 +24,9 @@ public class NacosServiceRegistry implements ServiceRegistry {
     @Override
     public void register(String serviceName, InetSocketAddress inetSocketAddress) {
         try {
-            // 在 Nacos 服务注册中心注册服务实例
             NacosUtil.registerService(serviceName, inetSocketAddress);
         } catch (NacosException e) {
-            logger.error("注册服务时有错误发生: ", e);
+            logger.error("注册服务时发生错误: ", e);
             throw new RpcException(ErrorEnum.REGISTER_SERVICE_FAILED);
         }
     }

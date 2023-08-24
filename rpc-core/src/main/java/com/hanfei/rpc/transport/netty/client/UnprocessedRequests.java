@@ -17,12 +17,10 @@ public class UnprocessedRequests {
     // 使用 ConcurrentHashMap 存储未处理的请求，保证线程安全
     private static ConcurrentHashMap<String, CompletableFuture<RpcResponse>> unprocessedResponseMap = new ConcurrentHashMap<>();
 
-    // 将请求放入未处理的请求容器中
     public void put(String requestId, CompletableFuture<RpcResponse> future) {
         unprocessedResponseMap.put(requestId, future);
     }
 
-    // 将请求从未处理的请求容器中移除
     public void remove(String requestId) {
         unprocessedResponseMap.remove(requestId);
     }
