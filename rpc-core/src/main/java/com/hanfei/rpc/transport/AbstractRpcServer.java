@@ -7,20 +7,20 @@ import com.hanfei.rpc.exception.RpcException;
 import com.hanfei.rpc.provider.ServiceProvider;
 import com.hanfei.rpc.registry.ServiceRegistry;
 import com.hanfei.rpc.util.ReflectUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
 
 /**
+ * manage the scan of @Service and the publishing of services
+ *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public abstract class AbstractRpcServer implements RpcServer {
-
-    protected Logger logger = LoggerFactory.getLogger(AbstractRpcServer.class);
 
     protected String host;
 
@@ -30,49 +30,68 @@ public abstract class AbstractRpcServer implements RpcServer {
 
     protected ServiceRegistry serviceRegistry;
 
+    /**
+     * Register a service to Nacos and save it in local service provider
+     * TODO check
+     */
     @Override
-    public <T> void publishService(T service, String serviceName) {
-        serviceProvider.addServiceProvider(service, serviceName);
-        serviceRegistry.register(serviceName, new InetSocketAddress(host, port));
+    public <T> void publishService(String serviceName, T service) {
+        serviceProvider.registerService(serviceName, service);
+        serviceRegistry.registerServiceToServer(serviceName, new InetSocketAddress(host, port));
     }
 
+    /**
+     * scan the @Service and publish them as services
+     */
     public void serviceScan() {
+        // get the fully qualified name of the main class that initiated the scan: SocketServer/NettyServer
         String mainClassName = ReflectUtil.getStackTrace();
+
         Class<?> startClass;
         try {
             startClass = Class.forName(mainClassName);
+            // Check if the @ServiceScan annotation is present on the main class
             if (!startClass.isAnnotationPresent(ServiceScan.class)) {
-                logger.error("启动类缺少 @serviceScan 注解");
+                log.error("The @ServiceScan annotation is missing");
                 throw new RpcException(ErrorEnum.SERVICE_SCAN_PACKAGE_NOT_FOUND);
             }
         } catch (ClassNotFoundException e) {
-            logger.error("出现未知错误");
+            log.error("Error when getStackTrace: {}", e.getMessage());
             throw new RpcException(ErrorEnum.UNKNOWN_ERROR);
         }
 
+        // get the base package to scan from the @ServiceScan annotation
         String basePackage = startClass.getAnnotation(ServiceScan.class).value();
+
+        // if the base package is not specified, use the package of the main class
         if ("".equals(basePackage)) {
             basePackage = mainClassName.substring(0, mainClassName.lastIndexOf("."));
         }
 
+        // get a set of classes in the specified base package
         Set<Class<?>> classSet = ReflectUtil.getClasses(basePackage);
         for (Class<?> clazz : classSet) {
+            // if a class has the @Service annotation, get its service name
             if (clazz.isAnnotationPresent(Service.class)) {
                 String serviceName = clazz.getAnnotation(Service.class).name();
                 Object obj;
                 try {
+                    // create an instance of the class using its default constructor
                     obj = clazz.newInstance();
                 } catch (InstantiationException | IllegalAccessException e) {
-                    logger.error("创建 {} 时有错误发生", clazz);
+                    log.error("Error when creating a new instance: {}", e.getMessage());
                     continue;
                 }
+
+                // if the service name is not specified, publish the service using its implemented interface names
                 if ("".equals(serviceName)) {
                     Class<?>[] interfaces = clazz.getInterfaces();
                     for (Class<?> oneInterface : interfaces) {
-                        publishService(obj, oneInterface.getCanonicalName());
+                        publishService(oneInterface.getCanonicalName(), obj);
                     }
                 } else {
-                    publishService(obj, serviceName);
+                    // otherwise, publish the service with the specified service name
+                    publishService(serviceName, obj);
                 }
             }
         }

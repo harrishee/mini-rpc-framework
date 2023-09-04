@@ -2,46 +2,38 @@ package com.hanfei.rpc.provider;
 
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 默认的服务提供者实现，用于保存服务端本地的服务实例对象和接口关系
- *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public class ServiceProviderImpl implements ServiceProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(ServiceProviderImpl.class);
-
-    private static final Map<String, Object> serviceMap = new ConcurrentHashMap<>();
-
-    private static final Set<String> registeredServiceSet = ConcurrentHashMap.newKeySet();
+    private static final Map<String, Object> serviceNameToObjectMap = new ConcurrentHashMap<>();
 
     @Override
-    public <T> void addServiceProvider(T service, String serviceName) {
-        if (registeredServiceSet.contains(serviceName)) {
+    public <T> void registerService(String serviceName, T serviceInstance) {
+        if (serviceNameToObjectMap.containsKey(serviceName)) {
             return;
         }
-        registeredServiceSet.add(serviceName);
-        serviceMap.put(serviceName, service);
-        logger.info("向接口: {} 注册服务: {}", service.getClass().getInterfaces(), serviceName);
+        serviceNameToObjectMap.put(serviceName, serviceInstance);
+        log.info("Register service: [{}] to interface: {}", serviceName, serviceInstance.getClass().getInterfaces());
     }
 
     @Override
-    public Object getServiceProvider(String serviceName) {
-        Object service = serviceMap.get(serviceName);
+    public Object getServiceInstanceByName(String serviceName) {
+        Object service = serviceNameToObjectMap.get(serviceName);
         if (service == null) {
-            logger.error("找不到对应的服务: " + serviceName);
+            log.error("Can not find service: {}", serviceName);
             throw new RpcException(ErrorEnum.SERVICE_NOT_FOUND);
         }
-        logger.info("获取服务: {} 成功，service: {}", serviceName, service);
+        log.info("Get service: [{}] from interface: {}", serviceName, service.getClass().getInterfaces());
         return service;
     }
 }

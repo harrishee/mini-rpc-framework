@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 服务类的注解
+ * Annotation for RPC service that will be published to registry
  *
  * @author: harris
  * @time: 2023

@@ -5,8 +5,7 @@ import com.hanfei.rpc.entity.RpcResponse;
 import com.hanfei.rpc.transport.netty.client.NettyClient;
 import com.hanfei.rpc.transport.socket.client.SocketClient;
 import com.hanfei.rpc.util.MessageCheckUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -16,15 +15,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
- * 客户端的动态代理类，用于生成远程服务接口的代理对象
+ * RPC client proxy
+ * This class acts as a proxy for invoking remote methods on the server
+ * It implements the InvocationHandler interface to handle method invocations
  *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public class RpcClientProxy implements InvocationHandler {
-
-    private static final Logger logger = LoggerFactory.getLogger(RpcClientProxy.class);
 
     private final RpcClient client;
 
@@ -32,33 +32,18 @@ public class RpcClientProxy implements InvocationHandler {
         this.client = client;
     }
 
-    /**
-     * 获取服务接口的代理对象
-     *
-     * @param clazz 服务接口的 Class 对象
-     * @param <T>   服务接口类型
-     * @return 服务接口的代理对象
-     */
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Class<T> clazz) {
-        // 使用 Proxy.newProxyInstance 创建代理对象
+        // Create a dynamic proxy instance for the given interface class
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]{clazz}, this);
     }
 
-    /**
-     * 动态代理的方法调用逻辑
-     *
-     * @param proxy  代理对象
-     * @param method 调用的方法
-     * @param args   方法参数
-     * @return 远程方法调用的结果
-     */
     @SuppressWarnings("unchecked")
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        logger.info("代理对象调用方法: {}#{}", method.getDeclaringClass().getName(), method.getName());
+        log.info("Proxy invoke method: {}#{}", method.getDeclaringClass().getName(), method.getName());
 
-        // 构建RPC请求
+        // Create an RPC request object
         RpcRequest rpcRequest = new RpcRequest(
                 UUID.randomUUID().toString(),
                 method.getDeclaringClass().getName(),
@@ -69,26 +54,27 @@ public class RpcClientProxy implements InvocationHandler {
         );
         RpcResponse rpcResponse = null;
 
-        // 如果是 Netty 客户端，使用 CompletableFuture 异步发送请求，并等待响应
         if (client instanceof NettyClient) {
             try {
-                // 获取异步响应结果
+                // If using Netty, send the RPC request using CompletableFuture
                 CompletableFuture<RpcResponse> completableFuture =
                         (CompletableFuture<RpcResponse>) client.sendRequest(rpcRequest);
+
+                // Wait for the response using the completableFuture.get() method
                 rpcResponse = completableFuture.get();
             } catch (InterruptedException | ExecutionException e) {
-                logger.error("方法调用请求发送失败", e);
+                log.info("Error when sending request: {}", e.getMessage());
                 return null;
             }
         }
 
-        // 如果是 Socket 客户端，直接发送请求并获取响应
         if (client instanceof SocketClient) {
+            // Send the RPC request and receive the response synchronously
             rpcResponse = (RpcResponse) client.sendRequest(rpcRequest);
         }
 
-        // 校验请求和响应的匹配性并获取数据部分
-        MessageCheckUtil.check(rpcRequest, rpcResponse);
+        // Validate the response and get the data part
+        MessageCheckUtil.validate(rpcRequest, rpcResponse);
         return rpcResponse.getData();
     }
 }

@@ -4,7 +4,7 @@ import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.serialize.CommonSerializer;
 
 /**
- * client 通用接口
+ * RPC client interface
  *
  * @author: harris
  * @time: 2023

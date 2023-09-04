@@ -3,7 +3,7 @@ package com.hanfei.rpc.registry;
 import java.net.InetSocketAddress;
 
 /**
- * 服务注册接口
+ * service registry interface
  *
  * @author: harris
  * @time: 2023
@@ -11,11 +11,5 @@ import java.net.InetSocketAddress;
  */
 public interface ServiceRegistry {
 
-    /**
-     * 在 Nacos 服务注册中心注册服务
-     *
-     * @param serviceName       服务名称
-     * @param inetSocketAddress 提供服务的地址
-     */
-    void register(String serviceName, InetSocketAddress inetSocketAddress);
+    void registerServiceToServer(String serviceName, InetSocketAddress inetSocketAddress);
 }

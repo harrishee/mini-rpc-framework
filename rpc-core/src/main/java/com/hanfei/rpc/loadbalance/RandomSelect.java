@@ -6,11 +6,13 @@ import java.util.List;
 import java.util.Random;
 
 /**
+ * Random strategy
+ *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
-public class RandomLoadBalance implements LoadBalance {
+public class RandomSelect implements LoadBalance {
 
     @Override
     public Instance select(List<Instance> instances) {

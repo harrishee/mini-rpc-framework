@@ -6,7 +6,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 未处理请求容器，用于保存尚未处理完毕的请求结果
  *
  * @author: harris
  * @time: 2023
@@ -14,8 +13,22 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class UnprocessedRequests {
 
-    // 使用 ConcurrentHashMap 存储未处理的请求，保证线程安全
+    // concurrentHashMap with request IDs and CompletableFuture
     private static ConcurrentHashMap<String, CompletableFuture<RpcResponse>> unprocessedResponseMap = new ConcurrentHashMap<>();
+
+    /**
+     *
+     */
+    public void completeAssociatedFuture(RpcResponse rpcResponse) {
+        CompletableFuture<RpcResponse> associatedFuture = unprocessedResponseMap.remove(rpcResponse.getRequestId());
+
+        // complete the associated future with the RPC response if found
+        if (associatedFuture != null) {
+            associatedFuture.complete(rpcResponse);
+        } else {
+            throw new IllegalStateException();
+        }
+    }
 
     public void put(String requestId, CompletableFuture<RpcResponse> future) {
         unprocessedResponseMap.put(requestId, future);
@@ -23,19 +36,5 @@ public class UnprocessedRequests {
 
     public void remove(String requestId) {
         unprocessedResponseMap.remove(requestId);
-    }
-
-    /**
-     * 完成请求结果，将结果设置到对应的 CompletableFuture 中
-     */
-    public void complete(RpcResponse rpcResponse) {
-        // 从未处理的请求容器中移除对应的请求
-        CompletableFuture<RpcResponse> future = unprocessedResponseMap.remove(rpcResponse.getRequestId());
-        // 将结果设置到对应的 CompletableFuture 中
-        if (future != null) {
-            future.complete(rpcResponse);
-        } else {
-            throw new IllegalStateException();
-        }
     }
 }

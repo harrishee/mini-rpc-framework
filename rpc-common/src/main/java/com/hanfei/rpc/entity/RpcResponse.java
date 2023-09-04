@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
- * 响应对象
+ * RPC Response Object
  *
  * @author: harris
  * @time: 2023
@@ -17,32 +17,22 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class RpcResponse<T> implements Serializable {
 
-    /**
-     * 序列化版本号
-     */
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 响应对应的请求号
-     */
+    // unique identifier for the corresponding request
     private String requestId;
 
-    /**
-     * 响应状态码
-     */
+    // response status code
     private Integer statusCode;
 
-    /**
-     * 响应补充消息
-     */
+    // response message
     private String message;
 
-    /**
-     * 响应数据
-     */
+    // response data
     private T data;
 
-    public static <T> RpcResponse<T> success(T data, String requestId) {
+    // constructor for success response
+    public static <T> RpcResponse<T> success(String requestId, T data) {
         RpcResponse<T> response = new RpcResponse<>();
         response.setRequestId(requestId);
         response.setStatusCode(ResponseEnum.SUCCESS.getCode());
@@ -50,7 +40,8 @@ public class RpcResponse<T> implements Serializable {
         return response;
     }
 
-    public static <T> RpcResponse<T> error(ResponseEnum code, String requestId) {
+    // constructor for error response
+    public static <T> RpcResponse<T> error(String requestId, ResponseEnum code) {
         RpcResponse<T> response = new RpcResponse<>();
         response.setRequestId(requestId);
         response.setStatusCode(code.getCode());

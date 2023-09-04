@@ -1,82 +1,95 @@
+# Harris RPC Framework
 
-# Harris RPC 框架
-Harris RPC 框架是一个基于 Java 的轻量级 RPC 框架，旨在帮助实现远程过程调用和分布式通信。该框架使用 Netty 进行网络通信，采用 Kryo 进行高效的序列化，同时利用 Nacos 实现服务注册与发现
+Harris RPC Framework is a lightweight RPC framework based on Java, designed to facilitate remote procedure calls and
+distributed communication.
+The framework provides two network communication methods, Socket and Netty, as well as two serialization methods, JSON
+and Kryo.
+It utilizes Nacos as a service registration center and implements a simple load balancing mechanism.
 
-## 模块概览
-本项目由多个模块组成，每个模块负责不同的功能和用途
+# Getting Started
 
-### 1. rpc-api
-定义了通用服务接口和其中的实体类，用于客户端和服务端之间的数据传输
+Chinese version: [Click here](README_CN.md)
 
-### 2. rpc-common
-定义了用于远程调用的通用实体类、枚举以及异常，也就是一种传输格式。这些类提供了在客户端和服务端之间进行数据传输所需的结构和信息
+Before you begin, ensure that Nacos is installed and properly configured for service registration and discovery.
 
-#### 传输协议格式
-1 远程调用请求 `RpcRequest`，为了唯一确定服务端需要调用的接口方法，需要了解以下信息：
-1. 接口名 `String interfaceName;`
-2. 方法名 `String methodName;`
-3. 参数类型 `Class<?>[] paramTypes;`：考虑到方法重载，需要包括调用方法的所有参数的类型信息。
-4. 参数实际值 `Object[] parameters;`：在客户端调用时，需要传递参数的实际值。
+### 1. Start the Nacos Server
 
-2 远程调用响应 `RpcResponse`，服务端对客户端请求的响应，其中包含：
-1. 响应状态码 `Integer statusCode;`
-2. 响应状态信息 `String message;`
-3. 响应数据 `T data;`
+The Nacos server is a crucial component for service registration and discovery in Harris RPC Framework. To start it,
+follow these steps:
 
-3 各种枚举类和异常类
+1. Navigate to the Nacos installation directory in your terminal.
+2. Start the Nacos server in standalone mode:
+    ```shell
+    sh startup.sh -m standalone
+    ```
 
-### 3. rpc-core
-#### 客户端
-`RpcClient` 是客户端的核心类，它负责与远程服务器建立连接，并通过网络发送和接收远程调用请求与响应。
-它实现了远程调用的过程，将用户的方法调用转化为网络数据传输
+This command initiates the Nacos server and prepares it to manage your services.
 
-#### 服务端
-`RpcServer` 是服务端的核心类，它负责监听指定的端口，接收来自客户端的远程调用请求。
-一旦接收到请求，RpcServer 将根据请求的内容进行路由和处理，然后将处理结果返回给客户端。通过这个类，服务端可以注册多个服务，以便处理不同的远程调用请求
+### 2. Server-Side Implementation
 
-### 4. test-client
-`test-client` 模块展示了 Harris RPC 框架的客户端功能。连接到运行中的服务器并发起远程方法调用请求
+Now, let's implement a service on the server-side:
 
-### 5. test-server
-`test-server` 模块展示了 Harris RPC 框架的服务端功能。注册了提供的各类服务，并在接收到客户端请求时提供相应的响应
+1. `Implement a service interface`: Define your service interface that includes the methods you want to make remotely
+   accessible.
+2. `Register the service`: Use the Harris RPC Framework to register your service on the server. This registration allows
+   clients to discover and access your service.
+3. `Start the server`: Start your server to make your service available for remote calls.
 
-## 项目发展
+### 3. Start the Client
 
-### 1. feat: basic rpc framework
-初步实现了一个基础的RPC框架，采用了JDK序列化和Socket通信方式。 目前实现了基本的远程方法调用功能。
-在这个阶段，我们成功地注册了一个名为 helloService 的服务，但是框架限制了每个服务器只能注册一个服务，因为在注册完服务后，服务器就自行启动了
+Once you've set up the server, you can start the client and begin making remote calls:
 
-下一步，将服务的注册和服务器启动分离，使得服务端可以提供多个服务
+1. `Initialize the client`: Configure and initialize the Harris RPC client, specifying the desired serialization method
+   and other settings.
+2. `Create proxies`: Use the proxy class provided by the framework to create proxy objects for your services. These
+   proxy objects enable you to invoke remote methods as if they were local.
+3. `Call the service`: Access the methods of your service through the proxy objects. The framework takes care of the
+   remote communication details, allowing you to focus on your application logic.
 
-### 2. feat: multi-service support
-在这个功能增强中，我们引入了服务注册表机制，以便实现服务的注册和发现。这个机制通过 ServiceRegistry 接口来实现，该接口定义了服务注册和获取的方法。
-借助于 ServiceRegistryImpl 类的实现，服务现在可以根据其接口名进行注册，并且可以根据接口名来获取对应的服务实体。这为更灵活的服务处理提供了基础
+# 1. Module Overview
 
-为了增强服务请求处理逻辑，我们对 RequestHandler 类进行了优化。它现在能够处理多个不同服务的请求。
-当收到客户端请求后，RequestHandler 会根据请求的接口名识别相应的服务实体，并调用适当的方法进行处理
+- `rpc-api`: Common service interfaces
+- `rpc-common`: Entities, enumerations, exceptions, utility classes, and more
+- `rpc-core`: Client, server, service registration center, serializers, load balancers, and more
+- `test-client`: Client functionality for registering services and making requests
+- `test-server`: Server functionality for registering services and starting servers to receive and process client
+  requests
 
-我们的框架在服务器端的能力得到了扩展，以支持多个服务。RpcServer 已经得到增强，可以同时注册和处理多个服务。
-在服务器启动时，例如在 TestServer 类中，我们可以使用 ServiceRegistry 注册类似 HelloService 的服务。
-当客户端请求到达时，RpcServer 会将请求智能路由到正确的服务进行处理
+# 2. Project Development
 
-为了确保并发处理多个客户端请求，我们采用了多线程方法。
-我们引入了 RequestHandlerThread 类，每个类都在单独的线程中处理一个传入的 RpcRequest。这确保了请求的高效和响应迅速
+## 1. `feat: basic rpc framework`
 
-此外，通过引入自定义的 RpcException 类，我们增强了异常处理。这有助于更好地管理和传递可能在 RPC 框架中出现的异常情况，提高了系统的健壮性
+Implemented the basic RPC framework using JDK serialization and Socket communication. Currently, it supports basic
+remote method invocation.
 
-### 3. feat: netty communication
-引入了 Netty 作为通信框架，取代了之前的基于 Socket 的通信方式。将传统的 BIO 方式传输换成效率更高的 NIO 方式
+Drawback: After registering a service, the server starts independently, allowing only one service to be registered on
+each server.
 
-### 4. feat: kryo serializer
-引入了 Kryo 序列化器，取代了之前的 Json 序列化器
+## 2. `feat: multi-service support`
 
-### 5. feat: nacos services
-引入了 Nacos 服务注册中心，取代了之前的本地注册表方式。将服务注册表从本地转移到了远程服务器上，使得服务的注册和发现更加灵活
+Introduced a service registry mechanism, allowing services to be registered based on their interface names and retrieved
+based on interface names.
 
-需要做负载均衡和注册多个服务
+## 3. `feat: netty communication`
 
-### 6. feat: load balance
-引入了负载均衡机制，实现了简易的随机负载均衡和轮转负载均衡
+Introduced Netty as the communication framework, replacing the previous Socket-based communication method.
+This transitioned from traditional BIO transmission to the more efficient NIO approach.
 
-### 7. feat: auto service registration
-引入了自动服务注册机制，使得服务的注册更加方便，启动服务器时无需手动注册服务
+## 4. `feat: kryo serializer`
+
+Introduced the Kryo serializer, replacing the previous JSON serializer.
+
+## 5. `feat: nacos services`
+
+Introduced Nacos as the service registration center, replacing the previous local registry approach.
+This move shifted the service registry from local to remote servers, making service registration and discovery more
+flexible.
+
+## 6. `feat: load balance`
+
+Introduced a load balancing mechanism, implementing simple random and round-robin load balancing.
+
+## 7. `feat: auto service registration`
+
+Introduced an automatic service registration mechanism, making service registration more convenient.
+It eliminates the need for manual service registration when starting servers.

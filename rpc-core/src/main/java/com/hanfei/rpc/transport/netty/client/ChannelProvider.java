@@ -1,16 +1,15 @@
 package com.hanfei.rpc.transport.netty.client;
 
+import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.transport.netty.codec.CommonDecoder;
 import com.hanfei.rpc.transport.netty.codec.CommonEncoder;
-import com.hanfei.rpc.serialize.CommonSerializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -20,109 +19,96 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 通道提供者，用于获取客户端通道
+ * Manages channel creation, reusing active channels, and initializing pipeline handlers
  *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public class ChannelProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(ChannelProvider.class);
-
+    // used for processing I/O events
     private static EventLoopGroup eventLoopGroup;
 
+    // stores the active channels
+    private static Map<String, Channel> channelsCache = new ConcurrentHashMap<>();
+
+    // Bootstrap instance for channel initialization
     private static Bootstrap bootstrap = initializeBootstrap();
 
-    private static Map<String, Channel> channels = new ConcurrentHashMap<>();
-
-    /**
-     * 初始化 Bootstrap 实例
-     */
     private static Bootstrap initializeBootstrap() {
-        // 创建 NIO 事件循环组，用于处理 I/O 事件
+        // initialize the EventLoopGroup for handling I/O events
         eventLoopGroup = new NioEventLoopGroup();
 
-        // 创建并且配置Bootstrap 实例
+        // initialize the Bootstrap instance with common options
         Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(eventLoopGroup) // 指定事件循环组
-                .channel(NioSocketChannel.class) // 指定通信通道类型为 NIO SocketChannel
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000) // 设置连接的超时时间
-                .option(ChannelOption.SO_KEEPALIVE, true) // 是否开启 TCP 底层心跳机制
-                .option(ChannelOption.TCP_NODELAY, true); // 是否启用 Nagle 算法
+        bootstrap.group(eventLoopGroup)
+                // use NioSocketChannel
+                .channel(NioSocketChannel.class)
+                // set the timeout time for connecting to the server
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.TCP_NODELAY, true);
         return bootstrap;
     }
 
-    /**
-     * 获取客户端通道
-     */
-    public static Channel get(InetSocketAddress inetSocketAddress, CommonSerializer serializer)
+    public static Channel getChannel(InetSocketAddress serverAddress, CommonSerializer serializer)
             throws InterruptedException {
+        String addressSerializerKey = serverAddress.toString() + serializer.getCode();
 
-        // 构建通道标识，由地址和序列化器编码共同决定
-        String key = inetSocketAddress.toString() + serializer.getCode();
-
-        // 判断是否已存在通道
-        if (channels.containsKey(key)) {
-            Channel channel = channels.get(key);
-            // 若通道存在且处于活动状态，直接返回通道
-            if (channels != null && channel.isActive()) {
+        // check if the target is in the cache
+        if (channelsCache.containsKey(addressSerializerKey)) {
+            Channel channel = channelsCache.get(addressSerializerKey);
+            if (channel != null && channel.isActive()) {
+                log.info("The client gets the channel from cache: {}", channel);
                 return channel;
             } else {
-                // 否则从映射中移除
-                channels.remove(key);
+                channelsCache.remove(addressSerializerKey);
             }
         }
 
-        // 初始化通道的处理器
+        // configure the pipeline for the new channel if not in the cache
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) {
-                // 自定义序列化编解码器
                 ch.pipeline()
                         .addLast(new CommonEncoder(serializer))
-                        // 添加心跳状态处理器，处理空闲状态
                         .addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS))
                         .addLast(new CommonDecoder())
-                        // 添加客户端处理器，处理通道数据的读写
                         .addLast(new NettyClientHandler());
             }
         });
+
+        // establish a new channel and add it to the cache
         Channel channel = null;
         try {
-            // 连接远程服务器，获取通道
-            channel = connect(bootstrap, inetSocketAddress);
+            channel = initiateConn(bootstrap, serverAddress);
+            log.info("The client gets the channel by new connection: {}", channel);
         } catch (ExecutionException e) {
-            logger.error("连接客户端时有错误发生", e);
+            log.error("Error during connecting to the server: {}", e.getMessage());
             return null;
         }
-
-        // 将通道添加到映射中，返回获取的通道
-        channels.put(key, channel);
+        channelsCache.put(addressSerializerKey, channel);
         return channel;
     }
 
-    /**
-     * 连接远程服务器，获取通道
-     */
-    private static Channel connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress)
+    private static Channel initiateConn(Bootstrap bootstrap, InetSocketAddress serverAddress)
             throws ExecutionException, InterruptedException {
 
-        // 创建一个CompletableFuture实例，用于异步获取连接结果
+        // create a CompletableFuture to track the result of the connection attempt
         CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
 
-        // 连接远程服务器，添加连接监听器
-        bootstrap.connect(inetSocketAddress).addListener((ChannelFutureListener) future -> {
+        // initiate the connection attempt and attach a listener to handle the result
+        bootstrap.connect(serverAddress).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
-                logger.info("客户端连接成功!");
-                // 连接成功时，将通道放入 CompletableFuture 中
+                // complete the CompletableFuture with the connected channel on success
                 completableFuture.complete(future.channel());
             } else {
                 throw new IllegalStateException();
             }
         });
-
-        // 等待连接结果并返回通道
+        // wait for the CompletableFuture to complete and return the connected channel
         return completableFuture.get();
     }
 }

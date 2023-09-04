@@ -5,7 +5,7 @@ import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.transport.RpcServer;
 
 /**
- * Netty 服务端
+ * Server side, Netty Version
  *
  * @author: harris
  * @time: 2023

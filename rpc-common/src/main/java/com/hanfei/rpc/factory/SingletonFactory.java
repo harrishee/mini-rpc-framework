@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 单例工厂类，用于获取单例对象实例
+ * Singleton factory, obtaining singleton object instances
  *
  * @author: harris
  * @time: 2023
@@ -12,36 +12,30 @@ import java.util.Map;
  */
 public class SingletonFactory {
 
-    // 存储不同类对应的单例对象
-    private static Map<Class, Object> objectMap = new HashMap<>();
+    // One kind of clazz can only
+    private static final Map<Class, Object> OBJECT_MAP = new HashMap<>();
 
-    // 私有构造函数，防止实例化
     private SingletonFactory() {
     }
 
     /**
-     * 获取指定类的单例对象实例
-     *
-     * @param clazz 要获取单例对象的类
-     * @param <T>   泛型参数，表示类的类型
-     * @return 指定类的单例对象实例
+     * get the singleton object instance, making sure that only one instance of the object exists in the JVM
      */
     public static <T> T getInstance(Class<T> clazz) {
-        Object instance = objectMap.get(clazz);
+        Object instance = OBJECT_MAP.get(clazz);
 
-        // 防止了多个线程同时创建实例，保持了单例模式的一致性和正确性
+        // synchronize on the class to ensure thread safety during instance creation
         synchronized (clazz) {
-            if (instance == null) { // 单例对象还未未创建
+            if (instance == null) {
                 try {
-                    // 使用反射创建类的实例并存入 objectMap
+                    // create a new instance using reflection and store it
                     instance = clazz.newInstance();
-                    objectMap.put(clazz, instance);
+                    OBJECT_MAP.put(clazz, instance);
                 } catch (IllegalAccessException | InstantiationException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
             }
         }
-        // 将实例转型为指定类类型并返回
         return clazz.cast(instance);
     }
 }

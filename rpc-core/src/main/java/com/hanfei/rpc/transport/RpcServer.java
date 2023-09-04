@@ -3,7 +3,7 @@ package com.hanfei.rpc.transport;
 import com.hanfei.rpc.serialize.CommonSerializer;
 
 /**
- * server 通用接口
+ * RPC server interface
  *
  * @author: harris
  * @time: 2023
@@ -15,5 +15,5 @@ public interface RpcServer {
 
     void start();
 
-    <T> void publishService(T service, String serviceName);
+    <T> void publishService(String serviceName, T service);
 }

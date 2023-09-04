@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 扫描服务类的注解
+ * Annotation for scanning RPC service
  *
  * @author: harris
  * @time: 2023

@@ -5,7 +5,7 @@ import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.transport.RpcServer;
 
 /**
- * Socket 服务端
+ * Server side, Socket Version
  *
  * @author: harris
  * @time: 2023

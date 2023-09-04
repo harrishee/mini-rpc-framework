@@ -5,7 +5,7 @@ import com.alibaba.nacos.api.naming.pojo.Instance;
 import java.util.List;
 
 /**
- * 负载均衡接口
+ * Load balancing strategy interface
  *
  * @author: harris
  * @time: 2023
@@ -14,7 +14,7 @@ import java.util.List;
 public interface LoadBalance {
 
     /**
-     * 从实例列表中选择下一个要调用的实例
+     * Select one service instance from available instances
      */
     Instance select(List<Instance> instances);
 }

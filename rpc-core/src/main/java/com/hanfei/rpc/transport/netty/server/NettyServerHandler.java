@@ -2,63 +2,72 @@ package com.hanfei.rpc.transport.netty.server;
 
 import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.entity.RpcResponse;
-import com.hanfei.rpc.handler.RequestHandler;
 import com.hanfei.rpc.factory.SingletonFactory;
+import com.hanfei.rpc.transport.handler.RpcRequestHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Netty 服务器处理器，负责处理客户端发送的 请求对象
+ * Handler for incoming requests in the Netty server
+ * Handling RPC requests, heartbeats, and manages exceptions
  *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
-    private static final Logger logger = LoggerFactory.getLogger(NettyServerHandler.class);
-
-    private final RequestHandler requestHandler;
+    private final RpcRequestHandler rpcRequestHandler;
 
     public NettyServerHandler() {
-        this.requestHandler = SingletonFactory.getInstance(RequestHandler.class);
+        this.rpcRequestHandler = SingletonFactory.getInstance(RpcRequestHandler.class);
     }
 
     /**
-     * 处理客户端发送的 请求对象
+     * processing the received data and returning the result
      */
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RpcRequest req) {
+    protected void channelRead0(ChannelHandlerContext ctx, RpcRequest rpcRequest) {
         try {
-            if (req.getHeartBeat()) {
-                logger.info("Receiving heartbeat from client: {}", ctx.channel().remoteAddress());
+            log.info("The server receives the request: [{}]", rpcRequest);
+
+            // check if it is a heartbeat package
+            if (rpcRequest.getHeartBeat()) {
+                log.info("Receiving heartbeat from client: [{}]", ctx.channel().remoteAddress());
                 return;
             }
 
-            logger.info("服务器接收到请求: {}", req);
-            Object result = requestHandler.handle(req);
+            // process the request and get the result
+            Object result = rpcRequestHandler.handleRequest(rpcRequest);
 
+            // send the result back to the client
             if (ctx.channel().isActive() && ctx.channel().isWritable()) {
-                ctx.writeAndFlush(RpcResponse.success(result, req.getRequestId()));
+                ctx.writeAndFlush(RpcResponse.success(rpcRequest.getRequestId(), result));
             } else {
-                logger.error("通道不可写");
+                log.error("The channel is not writable");
             }
         } finally {
-            ReferenceCountUtil.release(req);
+            ReferenceCountUtil.release(rpcRequest);
         }
     }
 
+    /**
+     * handling non-I/O events like idle states
+     */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
+            // get the specific idle state from the event
             IdleState state = ((IdleStateEvent) evt).state();
+
+            // if the idle state is READ_IDLE (no data received)
             if (state == IdleState.READER_IDLE) {
-                logger.info("长时间未收到心跳包，断开连接...");
+                log.info("The connection is disconnected due to heartbeat timeout...");
                 ctx.close();
             }
         } else {
@@ -66,9 +75,12 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
         }
     }
 
+    /**
+     * handling exceptions that occur during I/O operations in the channel
+     */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("处理过程调用时有错误发生: {}", cause.getMessage());
+        log.error("An exception occurred during the remote method call process: {}", cause.getMessage());
         ctx.close();
     }
 }

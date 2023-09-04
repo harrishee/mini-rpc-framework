@@ -1,108 +1,103 @@
 package com.hanfei.rpc.factory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.concurrent.*;
 
 /**
- * 创建线程池工具类
+ * Utility class for thread pools
  *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public class ThreadPoolFactory {
 
-    private final static Logger logger = LoggerFactory.getLogger(ThreadPoolFactory.class);
-
-    // 线程池参数
+    // configuration values for thread pool
     private static final int CORE_POOL_SIZE = 10;
     private static final int MAXIMUM_POOL_SIZE_SIZE = 100;
     private static final int KEEP_ALIVE_TIME = 1;
     private static final int BLOCKING_QUEUE_CAPACITY = 100;
 
-    // 每个线程池都可以通过一个唯一的名称进行标识
-    private static Map<String, ExecutorService> threadPoolsMap = new ConcurrentHashMap<>();
+    /**
+     * use threadNamePrefix to distinguish different thread pools
+     * we can think of thread pools with the same threadNamePrefix as serving the same business scenario
+     */
+    private static final Map<String, ExecutorService> THREAD_POOLS_MAP = new ConcurrentHashMap<>();
 
-    // 私有构造函数，防止实例化
     private ThreadPoolFactory() {
     }
 
-    /**
-     * 不创建守护线程
-     */
     public static ExecutorService createDefaultThreadPool(String threadNamePrefix) {
         return createDefaultThreadPool(threadNamePrefix, false);
     }
 
-    /**
-     * 创建线程池，并可以选择是否创建守护线程
-     */
     public static ExecutorService createDefaultThreadPool(String threadNamePrefix, Boolean daemon) {
-        // 从映射中获取具有指定前缀的线程池，如果不存在则创建新线程池
-        ExecutorService pool = threadPoolsMap.computeIfAbsent(threadNamePrefix, k ->
-                createThreadPool(threadNamePrefix, daemon));
-        
+        // create a thread pool if it does not exist
+        ExecutorService pool = THREAD_POOLS_MAP.computeIfAbsent(
+                threadNamePrefix, k -> createThreadPool(threadNamePrefix, daemon)
+        );
+
+        // if the thread pool is shutdown, replace it with a new one
         if (pool.isShutdown() || pool.isTerminated()) {
-            threadPoolsMap.remove(threadNamePrefix);
+            THREAD_POOLS_MAP.remove(threadNamePrefix);
             pool = createThreadPool(threadNamePrefix, daemon);
-            threadPoolsMap.put(threadNamePrefix, pool);
+            THREAD_POOLS_MAP.put(threadNamePrefix, pool);
         }
         return pool;
     }
 
     /**
-     * 创建线程池
-     */
-    private static ExecutorService createThreadPool(String threadNamePrefix, Boolean daemon) {
-        // 创建有界阻塞队列
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
-        // 创建线程工厂
-        ThreadFactory threadFactory = createThreadFactory(threadNamePrefix, daemon);
-        // 创建线程池
-        return new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE_SIZE, KEEP_ALIVE_TIME,
-                TimeUnit.MINUTES, workQueue, threadFactory);
-    }
-
-    /**
-     * 创建线程工厂，根据线程名称前缀和是否守护线程进行设置
+     * create a thread factory
      */
     private static ThreadFactory createThreadFactory(String threadNamePrefix, Boolean daemon) {
-        // 如果线程名称前缀不为空，则创建自定义线程工厂
         if (threadNamePrefix != null) {
             if (daemon != null) {
-                return new ThreadFactoryBuilder().setNameFormat(threadNamePrefix + "-%d").setDaemon(daemon).build();
+                return new ThreadFactoryBuilder()
+                        .setNameFormat(threadNamePrefix + "-%d")
+                        .setDaemon(daemon)
+                        .build();
             } else {
-                return new ThreadFactoryBuilder().setNameFormat(threadNamePrefix + "-%d").build();
+                return new ThreadFactoryBuilder()
+                        .setNameFormat(threadNamePrefix + "-%d")
+                        .build();
             }
         }
-        // 若未提供线程名称前缀，则使用默认线程工厂
         return Executors.defaultThreadFactory();
     }
 
     /**
-     * 关闭所有线程池
+     * create a thread pool
      */
-    public static void shutDownAll() {
-        logger.info("关闭所有线程池...");
+    private static ExecutorService createThreadPool(String threadNamePrefix, Boolean daemon) {
+        // create a blocking queue for holding tasks
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
+        // create a thread factory
+        ThreadFactory threadFactory = createThreadFactory(threadNamePrefix, daemon);
+        // create ThreadPoolExecutor with the provided configurations
+        return new ThreadPoolExecutor(
+                CORE_POOL_SIZE, MAXIMUM_POOL_SIZE_SIZE, KEEP_ALIVE_TIME,
+                TimeUnit.MINUTES, workQueue, threadFactory
+        );
+    }
 
-        // 遍历线程池映射的每个条目，使用并行流进行操作
-        threadPoolsMap.entrySet().parallelStream().forEach(entry -> {
-            // 获取当前线程池并关闭
+    public static void shutDownAll() {
+        log.info("Shutting down all thread pools...");
+
+        // iterate through all thread pools and shut them down
+        THREAD_POOLS_MAP.entrySet().parallelStream().forEach(entry -> {
             ExecutorService executorService = entry.getValue();
             executorService.shutdown();
-            logger.info("关闭线程池 [{}] [{}]", entry.getKey(), executorService.isTerminated());
             try {
-                // 等待线程池终止，最多等待10秒钟
                 executorService.awaitTermination(10, TimeUnit.SECONDS);
-            } catch (InterruptedException ie) {
-                logger.error("关闭线程池失败！");
-                // 强制中断未完成的任务并关闭线程池
+            } catch (InterruptedException e) {
+                log.error("Error shutting down thread pool");
                 executorService.shutdownNow();
             }
         });
+        log.info("All thread pools shut down successfully");
     }
 }

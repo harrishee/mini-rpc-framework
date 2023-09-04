@@ -5,49 +5,36 @@ import com.hanfei.rpc.entity.RpcResponse;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.enums.ResponseEnum;
 import com.hanfei.rpc.exception.RpcException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * 检查 RPC 消息的工具类，用于校验请求和响应是否合法
+ * validate if the response is correct
  *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public class MessageCheckUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(MessageCheckUtil.class);
-
-    // 请求中接口名称的键
-    public static final String INTERFACE_NAME = "interfaceName";
-
-    // 私有构造函数，不允许实例化该工具类
     private MessageCheckUtil() {
     }
 
-    /**
-     * 校验 RPC 请求和响应是否合法
-     */
-    public static void check(RpcRequest rpcRequest, RpcResponse rpcResponse) {
+    public static void validate(RpcRequest rpcRequest, RpcResponse rpcResponse) {
+        String interfaceName = rpcRequest.getInterfaceName();
         if (rpcResponse == null) {
-            logger.error("调用服务失败，serviceName: {}", rpcRequest.getInterfaceName());
-            throw new RpcException(ErrorEnum.SERVICE_INVOCATION_FAILURE, INTERFACE_NAME + ":"
-                    + rpcRequest.getInterfaceName());
+            log.error("Error when calling service: {}，response is null", interfaceName);
+            throw new RpcException(ErrorEnum.SERVICE_INVOCATION_FAILURE, "interfaceName:" + interfaceName);
         }
 
-        // 校验请求和响应的请求 ID 是否匹配
-        if (!rpcRequest.getRequestId().equals(rpcResponse.getRequestId())) {
-            logger.error("调用服务失败，serviceName: {}", rpcRequest.getInterfaceName());
-            throw new RpcException(ErrorEnum.RESPONSE_NOT_MATCH, INTERFACE_NAME + ":"
-                    + rpcRequest.getInterfaceName());
+        if (!rpcResponse.getRequestId().equals(rpcRequest.getRequestId())) {
+            log.error("Error when calling service: {}，not correct requestId", interfaceName);
+            throw new RpcException(ErrorEnum.RESPONSE_NOT_MATCH, "interfaceName:" + interfaceName);
         }
 
-        // 校验响应状态码是否为成功
         if (rpcResponse.getStatusCode() == null || !rpcResponse.getStatusCode().equals(ResponseEnum.SUCCESS.getCode())) {
-            logger.error("调用服务失败，serviceName: {}，RpcResponse: {}", rpcRequest.getInterfaceName(), rpcResponse);
-            throw new RpcException(ErrorEnum.SERVICE_INVOCATION_FAILURE, INTERFACE_NAME + ":"
-                    + rpcRequest.getInterfaceName());
+            log.error("Error when calling service: {}，response status code not success", interfaceName);
+            throw new RpcException(ErrorEnum.SERVICE_INVOCATION_FAILURE, "interfaceName:" + interfaceName);
         }
     }
 }

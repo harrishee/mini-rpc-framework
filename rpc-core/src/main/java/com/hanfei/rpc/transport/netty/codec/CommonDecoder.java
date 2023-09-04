@@ -2,45 +2,39 @@ package com.hanfei.rpc.transport.netty.codec;
 
 import com.hanfei.rpc.entity.RpcRequest;
 import com.hanfei.rpc.entity.RpcResponse;
-import com.hanfei.rpc.enums.PackageTypeEnum;
 import com.hanfei.rpc.enums.ErrorEnum;
+import com.hanfei.rpc.enums.PackageTypeEnum;
 import com.hanfei.rpc.exception.RpcException;
 import com.hanfei.rpc.serialize.CommonSerializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ReplayingDecoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 /**
- * 消息解码器
+ * Message decoder, decoding incoming ByteBuf messages into Java objects
  *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public class CommonDecoder extends ReplayingDecoder {
 
-    private static final Logger logger = LoggerFactory.getLogger(CommonDecoder.class);
-
-    private static final int MAGIC_NUMBER = 0xCAFEBABE;
-
-    public static void main(String[] args) {
-        System.out.println(MAGIC_NUMBER);
-    }
+    private static final int MAGIC_NUMBER = 0xCAFFBABE;
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+        // 1. read the magic number from the incoming ByteBuf
         int magic = in.readInt();
-
         if (magic != MAGIC_NUMBER) {
-            logger.error("MAGIC NUMBER ERROR: {}", magic);
+            log.error("Error when decoding magic number: {}", magic);
             throw new RpcException(ErrorEnum.UNKNOWN_PROTOCOL);
         }
 
-        // 从字节数据中读取数据包类型代码
+        // 2. read the package code from the incoming ByteBuf
         int packageCode = in.readInt();
         Class<?> packageClass;
         if (packageCode == PackageTypeEnum.REQUEST_PACK.getCode()) {
@@ -48,23 +42,25 @@ public class CommonDecoder extends ReplayingDecoder {
         } else if (packageCode == PackageTypeEnum.RESPONSE_PACK.getCode()) {
             packageClass = RpcResponse.class;
         } else {
-            logger.error("PACKAGE CODE ERROR: {}", packageCode);
+            log.error("Error when decoding package type code: {}", packageCode);
             throw new RpcException(ErrorEnum.UNKNOWN_PACKAGE_TYPE);
         }
 
-        // 从字节数据中读取序列化器代码
+        // 3. read the serializer code from the incoming ByteBuf
         int serializerCode = in.readInt();
         CommonSerializer serializer = CommonSerializer.getByCode(serializerCode);
         if (serializer == null) {
-            logger.error("SERIALIZER CODE ERROR: {}", serializerCode);
+            log.error("Error when decoding serializer code: {}", serializerCode);
             throw new RpcException(ErrorEnum.UNKNOWN_SERIALIZER);
         }
 
+        // 4/5. read the length of the serialized data from the incoming ByteBuf
         int length = in.readInt();
         byte[] bytes = new byte[length];
         in.readBytes(bytes);
+
+        // deserialize the data using the selected serializer and class
         Object obj = serializer.deserialize(bytes, packageClass);
-        // 将反序列化后的 Java 对象添加到输出列表中
         out.add(obj);
     }
 }

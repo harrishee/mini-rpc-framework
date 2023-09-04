@@ -15,16 +15,19 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 
 /**
- * Netty 服务端
+ * Netty server implementation for handling RPC communication
+ * Responsible for starting the server, managing connections, and handling incoming requests
  *
  * @author: harris
  * @time: 2023
  * @summary: harris-rpc-framework
  */
+@Slf4j
 public class NettyServer extends AbstractRpcServer {
 
     private CommonSerializer serializer;
@@ -32,47 +35,62 @@ public class NettyServer extends AbstractRpcServer {
     public NettyServer(String host, int port, Integer serializer) {
         this.host = host;
         this.port = port;
-        serviceRegistry = new NacosServiceRegistry();
-        serviceProvider = new ServiceProviderImpl();
         this.serializer = CommonSerializer.getByCode(serializer);
 
-        serviceScan();
+        // TODO check
+        serviceRegistry = new NacosServiceRegistry();
+        serviceProvider = new ServiceProviderImpl();
+
+        serviceScan(); // scan all @Service and publish them
     }
 
     @Override
     public void start() {
+        // register a shutdown hook to clear all registered services on JVM shutdown
         ShutdownHook.getShutdownHook().addClearAllHook();
-        // 创建用于接收连接的 boss 线程组
+
+        // create event loop groups for handling I/O operations
         EventLoopGroup bossGroup = new NioEventLoopGroup();
-        // 创建用于处理连接的 worker 线程组
         EventLoopGroup workerGroup = new NioEventLoopGroup();
+
         try {
+            // create and configure the server bootstrap
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class) // 指定通信通道类型为 NIO ServerSocketChannel
-                    .handler(new LoggingHandler(LogLevel.INFO)) // 添加日志处理器，用于打印日志
-                    .option(ChannelOption.SO_BACKLOG, 256) // 设置 TCP 连接的队列大小
-                    .option(ChannelOption.SO_KEEPALIVE, true) // 设置 Socket 选项，开启 TCP 连接的心跳保活机制
-                    .childOption(ChannelOption.TCP_NODELAY, true) // 设置子 Channel 选项，关闭 Nagle 算法
+                    // use NioServerSocketChannel
+                    .channel(NioServerSocketChannel.class)
+                    // logging handler for server's channel
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    // the maximum length of the queue to temporarily hold completed three-way handshake requests.
+                    // if the conn establishment is frequent and the server creating new connections slowly,
+                    // this parameter can be increased appropriately
+                    .option(ChannelOption.SO_BACKLOG, 256)
+                    // enable the TCP heartbeat mechanism
+                    // maintaining an active state of the connection to prevent it from being accidentally closed
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    // enable the Nagle algorithm
+                    // transmitting large data packets as much as possible to reduce network transmission
+                    .childOption(ChannelOption.TCP_NODELAY, true)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
                             ChannelPipeline pipeline = ch.pipeline();
+                            // add handlers to the pipeline
                             pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS))
+                                    // my encoder, decoder, and handler
                                     .addLast(new CommonEncoder(serializer))
                                     .addLast(new CommonDecoder())
                                     .addLast(new NettyServerHandler());
                         }
                     });
 
-            // 绑定服务器监听地址和端口，并同步等待绑定完成
+            // bind and start the server, wait for the server to close
             ChannelFuture future = serverBootstrap.bind(host, port).sync();
-            // 等待服务器的关闭事件
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
-            logger.error("启动服务器时有错误发生: ", e);
+            log.error("Error when starting server: {}", e.getMessage());
         } finally {
-            // 关闭 boss 线程组和 worker 线程组
+            // gracefully shutdown the event loop groups
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }

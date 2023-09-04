@@ -8,7 +8,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
- * 消息编码器
+ * Message encoder, encoding outgoing Java objects into ByteBuf
  *
  * @author: harris
  * @time: 2023
@@ -16,30 +16,37 @@ import io.netty.handler.codec.MessageToByteEncoder;
  */
 public class CommonEncoder extends MessageToByteEncoder {
 
-    private static final int MAGIC_NUMBER = 0xCAFEBABE;
+    private static final int MAGIC_NUMBER = 0xCAFFBABE;
 
     private final CommonSerializer serializer;
 
+    // accept serializer for encoding
     public CommonEncoder(CommonSerializer serializer) {
         this.serializer = serializer;
     }
 
-    /**
-     * 对数据对象进行编码
-     */
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) {
+        // 1. write the magic number to the ByteBuf
         out.writeInt(MAGIC_NUMBER);
 
+        // 2. determine the package type based on the message type
         if (msg instanceof RpcRequest) {
             out.writeInt(PackageTypeEnum.REQUEST_PACK.getCode());
         } else {
             out.writeInt(PackageTypeEnum.RESPONSE_PACK.getCode());
         }
+
+        // 3. write the serializer code to the ByteBuf
         out.writeInt(serializer.getCode());
 
+        // serialize the message using the selected serializer
         byte[] bytes = serializer.serialize(msg);
+
+        // 4. write the length of the serialized data to the ByteBuf
         out.writeInt(bytes.length);
+
+        // 5. write the serialized data to the ByteBuf
         out.writeBytes(bytes);
     }
 }

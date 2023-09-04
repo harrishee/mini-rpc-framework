@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
- * 请求对象
+ * RPC Request Object
  *
  * @author: harris
  * @time: 2023
@@ -18,38 +18,23 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class RpcRequest implements Serializable {
 
-    /**
-     * 序列化版本号
-     */
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 请求号
-     */
+    // unique identifier for the request
     private String requestId;
 
-    /**
-     * 待调用接口名称
-     */
+    // target interface name
     private String interfaceName;
 
-    /**
-     * 待调用方法名称
-     */
+    // target method name
     private String methodName;
 
-    /**
-     * 调用方法的参数
-     */
+    // method parameters
     private Object[] parameters;
 
-    /**
-     * 调用方法的参数类型
-     */
+    // method parameter types
     private Class<?>[] paramTypes;
 
-    /**
-     * 是否是心跳包
-     */
+    // if the request is a heartbeat
     private Boolean heartBeat;
 }

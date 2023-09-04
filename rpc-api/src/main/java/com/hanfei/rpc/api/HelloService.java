@@ -7,5 +7,5 @@ package com.hanfei.rpc.api;
  */
 public interface HelloService {
 
-    String hello(HelloObject object);
+    String sayHello(HelloPOJO object);
 }
