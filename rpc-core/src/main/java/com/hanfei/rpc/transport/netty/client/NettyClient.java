@@ -22,14 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Netty client implementation for sending RPC requests
- * Responsible for sending RPC requests and managing communication with the server
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public class NettyClient implements RpcClient {
 

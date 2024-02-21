@@ -5,13 +5,7 @@ import com.hanfei.rpc.util.NacosUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Clean up the resources
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public class ShutdownHook {
 

@@ -11,13 +11,7 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-/**
- * Used for auto scanning of classes
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 public class ReflectUtil {
 
     /**

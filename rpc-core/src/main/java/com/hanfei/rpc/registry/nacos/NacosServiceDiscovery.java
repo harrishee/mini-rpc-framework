@@ -13,11 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-/**
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public class NacosServiceDiscovery implements ServiceDiscovery {
 

@@ -11,14 +11,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Handler for incoming requests in the Netty server
- * Handling RPC requests, heartbeats, and manages exceptions
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
 

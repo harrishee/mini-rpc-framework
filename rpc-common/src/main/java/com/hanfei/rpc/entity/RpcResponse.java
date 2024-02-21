@@ -6,13 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
-/**
- * RPC Response Object
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Data
 @NoArgsConstructor
 public class RpcResponse<T> implements Serializable {

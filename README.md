@@ -1,6 +1,6 @@
-# Harris RPC Framework
+# Mini RPC Framework
 
-Harris RPC Framework is a lightweight RPC framework based on Java, designed to facilitate remote procedure calls and
+Mini RPC Framework is a lightweight RPC framework based on Java, designed to facilitate remote procedure calls and
 distributed communication.
 The framework provides two network communication methods, Socket and Netty, as well as two serialization methods, JSON
 and Kryo.
@@ -14,7 +14,7 @@ Before you begin, ensure that Nacos is installed and properly configured for ser
 
 ### 1. Start the Nacos Server
 
-The Nacos server is a crucial component for service registration and discovery in Harris RPC Framework. To start it,
+The Nacos server is a crucial component for service registration and discovery in Mini RPC Framework. To start it,
 follow these steps:
 
 1. Navigate to the Nacos installation directory in your terminal.
@@ -31,7 +31,7 @@ Now, let's implement a service on the server-side:
 
 1. `Implement a service interface`: Define your service interface that includes the methods you want to make remotely
    accessible.
-2. `Register the service`: Use the Harris RPC Framework to register your service on the server. This registration allows
+2. `Register the service`: Use the Mini RPC Framework to register your service on the server. This registration allows
    clients to discover and access your service.
 3. `Start the server`: Start your server to make your service available for remote calls.
 
@@ -39,7 +39,7 @@ Now, let's implement a service on the server-side:
 
 Once you've set up the server, you can start the client and begin making remote calls:
 
-1. `Initialize the client`: Configure and initialize the Harris RPC client, specifying the desired serialization method
+1. `Initialize the client`: Configure and initialize the Mini RPC client, specifying the desired serialization method
    and other settings.
 2. `Create proxies`: Use the proxy class provided by the framework to create proxy objects for your services. These
    proxy objects enable you to invoke remote methods as if they were local.

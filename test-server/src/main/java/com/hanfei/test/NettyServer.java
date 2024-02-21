@@ -4,13 +4,7 @@ import com.hanfei.rpc.annotation.ServiceScan;
 import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.transport.RpcServer;
 
-/**
- * Server side, Netty Version
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @ServiceScan
 public class NettyServer {
 

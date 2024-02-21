@@ -7,13 +7,7 @@ import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.transport.RpcClient;
 import com.hanfei.rpc.transport.RpcClientProxy;
 
-/**
- * Client side, Netty version
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 public class NettyClient {
 
     public static void main(String[] args) {

@@ -13,13 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-/**
- * Message decoder, decoding incoming ByteBuf messages into Java objects
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public class CommonDecoder extends ReplayingDecoder {
 

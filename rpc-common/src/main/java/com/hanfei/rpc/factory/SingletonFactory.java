@@ -3,13 +3,7 @@ package com.hanfei.rpc.factory;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Singleton factory, obtaining singleton object instances
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 public class SingletonFactory {
 
     // One kind of clazz can only

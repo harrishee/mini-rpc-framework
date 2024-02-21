@@ -4,11 +4,7 @@ import com.hanfei.rpc.annotation.Service;
 import com.hanfei.rpc.api.HelloPOJO;
 import com.hanfei.rpc.api.HelloService;
 
-/**
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Service
 public class HelloServiceImpl implements HelloService {
 

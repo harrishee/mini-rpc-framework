@@ -1,12 +1,6 @@
 package com.hanfei.rpc.serialize;
 
-/**
- * Serializer interface
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 public interface CommonSerializer {
 
     Integer KRYO_SERIALIZER = 0;

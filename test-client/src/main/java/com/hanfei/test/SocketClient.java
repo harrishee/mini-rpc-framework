@@ -6,13 +6,7 @@ import com.hanfei.rpc.api.HelloService;
 import com.hanfei.rpc.serialize.CommonSerializer;
 import com.hanfei.rpc.transport.RpcClientProxy;
 
-/**
- * Client side, Socket version
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 public class SocketClient {
 
     public static void main(String[] args) {

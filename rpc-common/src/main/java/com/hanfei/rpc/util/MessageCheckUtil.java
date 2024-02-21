@@ -7,13 +7,7 @@ import com.hanfei.rpc.enums.ResponseEnum;
 import com.hanfei.rpc.exception.RpcException;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * validate if the response is correct
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public class MessageCheckUtil {
 

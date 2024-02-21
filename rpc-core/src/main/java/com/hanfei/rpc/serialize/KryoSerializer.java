@@ -12,13 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-/**
- * Kryo Serializer, serialize object to byte array, or deserialize byte array to object
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public class KryoSerializer implements CommonSerializer {
 

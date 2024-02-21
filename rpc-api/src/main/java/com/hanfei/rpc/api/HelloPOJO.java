@@ -6,11 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
-/**
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -12,13 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
-/**
- * manage the scan of @Service and the publishing of services
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public abstract class AbstractRpcServer implements RpcServer {
 

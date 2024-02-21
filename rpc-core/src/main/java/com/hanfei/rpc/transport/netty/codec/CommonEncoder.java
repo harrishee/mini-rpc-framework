@@ -7,13 +7,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
-/**
- * Message encoder, encoding outgoing Java objects into ByteBuf
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 public class CommonEncoder extends MessageToByteEncoder {
 
     private static final int MAGIC_NUMBER = 0xCAFFBABE;

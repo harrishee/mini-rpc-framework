@@ -5,12 +5,7 @@ import com.hanfei.rpc.entity.RpcResponse;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 public class UnprocessedRequests {
 
     // concurrentHashMap with request IDs and CompletableFuture

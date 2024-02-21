@@ -5,9 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.hanfei</groupId>
-    <artifactId>harris-rpc-framework</artifactId>
+    <artifactId>mini-rpc-framework</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <modules>
         <module>rpc-api</module>
         <module>rpc-common</module>
@@ -17,8 +18,8 @@
     </modules>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -29,14 +30,12 @@
             <version>1.18.28</version>
         </dependency>
 
-        <!-- SLF4J 是一个日志门面框架，提供了一个通用的日志接口。 -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>2.0.7</version>
         </dependency>
 
-        <!-- slf4j-simple 是 SLF4J 提供的一个简单日志实现，将日志记录输出到控制台。适用于开发和测试阶段。 -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>

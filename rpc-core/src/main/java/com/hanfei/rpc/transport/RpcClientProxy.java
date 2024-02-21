@@ -14,15 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-/**
- * RPC client proxy
- * This class acts as a proxy for invoking remote methods on the server
- * It implements the InvocationHandler interface to handle method invocations
- *
- * @author: harris
- * @time: 2023
- * @summary: harris-rpc-framework
- */
+
 @Slf4j
 public class RpcClientProxy implements InvocationHandler {
 
