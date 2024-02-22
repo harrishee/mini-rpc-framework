@@ -1,0 +1,5 @@
+
+x
+java:S1450"]Remove the "eventLoopGroup" field and declare it as a local variable in the relevant methods.(¿¢èïüÿÿÿÿ
+U
+java:S1118":Add a private constructor to hide the implicit public one.(ª…ÒÖşÿÿÿÿ

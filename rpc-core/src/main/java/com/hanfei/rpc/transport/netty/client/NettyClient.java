@@ -1,15 +1,15 @@
 package com.hanfei.rpc.transport.netty.client;
 
-import com.hanfei.rpc.entity.RpcRequest;
-import com.hanfei.rpc.entity.RpcResponse;
+import com.hanfei.rpc.model.RpcRequest;
+import com.hanfei.rpc.model.RpcResponse;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
-import com.hanfei.rpc.factory.SingletonFactory;
-import com.hanfei.rpc.loadbalance.LoadBalance;
-import com.hanfei.rpc.loadbalance.RoundRobinSelect;
+import com.hanfei.rpc.util.SingletonFactory;
+import com.hanfei.rpc.loadbalancer.LoadBalance;
+import com.hanfei.rpc.loadbalancer.RoundRobin;
 import com.hanfei.rpc.registry.ServiceDiscovery;
-import com.hanfei.rpc.registry.nacos.NacosServiceDiscovery;
-import com.hanfei.rpc.serialize.CommonSerializer;
+import com.hanfei.rpc.registry.NacosServiceDiscovery;
+import com.hanfei.rpc.serializer.Serializer;
 import com.hanfei.rpc.transport.RpcClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -22,18 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 
-
 @Slf4j
 public class NettyClient implements RpcClient {
-
     private final ServiceDiscovery serviceDiscovery;
-
-    private final CommonSerializer serializer;
-
+    private final Serializer serializer;
     private static final EventLoopGroup group;
-
     private static final Bootstrap bootstrap;
-
     private final UnprocessedRequests unprocessedRequests;
 
     static {
@@ -46,11 +40,11 @@ public class NettyClient implements RpcClient {
     }
 
     public NettyClient(Integer serializer) {
-        LoadBalance loadBalanceStrategy = new RoundRobinSelect();
+        LoadBalance loadBalance = new RoundRobin();
         // create a NacosServiceDiscovery instance with the specified load balancing strategy
-        this.serviceDiscovery = new NacosServiceDiscovery(loadBalanceStrategy);
+        this.serviceDiscovery = new NacosServiceDiscovery(loadBalance);
         // set the serializer by code
-        this.serializer = CommonSerializer.getByCode(serializer);
+        this.serializer = Serializer.getByCode(serializer);
         // obtain an instance of UnprocessedRequests using SingletonFactory
         this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
     }

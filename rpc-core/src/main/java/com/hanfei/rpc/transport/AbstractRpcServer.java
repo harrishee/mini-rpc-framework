@@ -1,7 +1,7 @@
 package com.hanfei.rpc.transport;
 
-import com.hanfei.rpc.annotation.Service;
-import com.hanfei.rpc.annotation.ServiceScan;
+import com.hanfei.rpc.anno.Service;
+import com.hanfei.rpc.anno.ServiceScan;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
 import com.hanfei.rpc.provider.ServiceProvider;
@@ -12,21 +12,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
-
 @Slf4j
 public abstract class AbstractRpcServer implements RpcServer {
-
     protected String host;
-
     protected int port;
-
     protected ServiceProvider serviceProvider;
-
     protected ServiceRegistry serviceRegistry;
 
     /**
      * Register a service to Nacos and save it in local service provider
-     * TODO check
      */
     @Override
     public <T> void publishService(String serviceName, T service) {

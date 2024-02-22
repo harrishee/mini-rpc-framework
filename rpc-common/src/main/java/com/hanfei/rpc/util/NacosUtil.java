@@ -6,6 +6,8 @@ import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
@@ -14,18 +16,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class NacosUtil {
-
     private static final NamingService namingService;
-
-    // a set to store registered service names
     private static final Set<String> serviceNamesSet = new HashSet<>();
-
     private static InetSocketAddress registryAddress;
-
-    // TODO: hard coding for now
     private static final String NACOS_SERVER_ADDR = "127.0.0.1:8848";
 
     static {

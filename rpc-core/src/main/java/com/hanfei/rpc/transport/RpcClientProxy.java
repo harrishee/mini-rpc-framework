@@ -1,10 +1,10 @@
 package com.hanfei.rpc.transport;
 
-import com.hanfei.rpc.entity.RpcRequest;
-import com.hanfei.rpc.entity.RpcResponse;
+import com.hanfei.rpc.model.RpcRequest;
+import com.hanfei.rpc.model.RpcResponse;
 import com.hanfei.rpc.transport.netty.client.NettyClient;
 import com.hanfei.rpc.transport.socket.client.SocketClient;
-import com.hanfei.rpc.util.MessageCheckUtil;
+import com.hanfei.rpc.util.MessageUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
@@ -14,10 +14,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-
 @Slf4j
 public class RpcClientProxy implements InvocationHandler {
-
     private final RpcClient client;
 
     public RpcClientProxy(RpcClient client) {
@@ -66,7 +64,7 @@ public class RpcClientProxy implements InvocationHandler {
         }
 
         // Validate the response and get the data part
-        MessageCheckUtil.validate(rpcRequest, rpcResponse);
+        MessageUtil.validate(rpcRequest, rpcResponse);
         return rpcResponse.getData();
     }
 }

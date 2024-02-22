@@ -1,11 +1,11 @@
 package com.hanfei.rpc.transport.socket.server;
 
-import com.hanfei.rpc.factory.ThreadPoolFactory;
-import com.hanfei.rpc.transport.handler.RpcRequestHandler;
-import com.hanfei.rpc.hook.ShutdownHook;
+import com.hanfei.rpc.util.ThreadPoolFactory;
+import com.hanfei.rpc.transport.RpcRequestHandler;
+import com.hanfei.rpc.ShutdownHook;
 import com.hanfei.rpc.provider.ServiceProviderImpl;
-import com.hanfei.rpc.registry.nacos.NacosServiceRegistry;
-import com.hanfei.rpc.serialize.CommonSerializer;
+import com.hanfei.rpc.registry.NacosServiceRegistry;
+import com.hanfei.rpc.serializer.Serializer;
 import com.hanfei.rpc.transport.AbstractRpcServer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,20 +15,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 
-
 @Slf4j
 public class SocketServer extends AbstractRpcServer {
-
     private final ExecutorService threadPool;
-
-    private final CommonSerializer serializer;
-
+    private final Serializer serializer;
     private final RpcRequestHandler rpcRequestHandler = new RpcRequestHandler();
 
     public SocketServer(String host, int port, Integer serializer) {
         this.host = host;
         this.port = port;
-        this.serializer = CommonSerializer.getByCode(serializer);
+        this.serializer = Serializer.getByCode(serializer);
 
         this.serviceRegistry = new NacosServiceRegistry();
         this.serviceProvider = new ServiceProviderImpl();
@@ -49,7 +45,7 @@ public class SocketServer extends AbstractRpcServer {
                 log.info("Client connected! {}:{}", socket.getInetAddress(), socket.getPort());
 
                 // submit the task to the thread pool
-                threadPool.execute(new SocketRequestHandlerRunnable(socket, rpcRequestHandler, serializer));
+                threadPool.execute(new SocketRequestHandler(socket, rpcRequestHandler, serializer));
             }
             threadPool.shutdown();
         } catch (IOException e) {

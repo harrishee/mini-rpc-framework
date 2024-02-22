@@ -1,5 +1,8 @@
 package com.hanfei.rpc.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.JarURLConnection;
@@ -11,9 +14,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReflectUtil {
-
     /**
      * Get the class name from the current stack trace
      */

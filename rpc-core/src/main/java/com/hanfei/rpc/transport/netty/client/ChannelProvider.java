@@ -1,8 +1,8 @@
 package com.hanfei.rpc.transport.netty.client;
 
-import com.hanfei.rpc.serialize.CommonSerializer;
-import com.hanfei.rpc.transport.netty.codec.CommonDecoder;
-import com.hanfei.rpc.transport.netty.codec.CommonEncoder;
+import com.hanfei.rpc.serializer.Serializer;
+import com.hanfei.rpc.transport.netty.util.DecodeUtil;
+import com.hanfei.rpc.transport.netty.util.EncodeUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -18,18 +18,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-
 @Slf4j
 public class ChannelProvider {
-
-    // used for processing I/O events
     private static EventLoopGroup eventLoopGroup;
-
-    // stores the active channels
     private static Map<String, Channel> channelsCache = new ConcurrentHashMap<>();
-
-    // Bootstrap instance for channel initialization
-    private static Bootstrap bootstrap = initializeBootstrap();
+    private static final Bootstrap bootstrap = initializeBootstrap();
 
     private static Bootstrap initializeBootstrap() {
         // initialize the EventLoopGroup for handling I/O events
@@ -47,8 +40,7 @@ public class ChannelProvider {
         return bootstrap;
     }
 
-    public static Channel getChannel(InetSocketAddress serverAddress, CommonSerializer serializer)
-            throws InterruptedException {
+    public static Channel getChannel(InetSocketAddress serverAddress, Serializer serializer) throws InterruptedException {
         String addressSerializerKey = serverAddress.toString() + serializer.getCode();
 
         // check if the target is in the cache
@@ -67,9 +59,9 @@ public class ChannelProvider {
             @Override
             protected void initChannel(SocketChannel ch) {
                 ch.pipeline()
-                        .addLast(new CommonEncoder(serializer))
+                        .addLast(new EncodeUtil(serializer))
                         .addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS))
-                        .addLast(new CommonDecoder())
+                        .addLast(new DecodeUtil())
                         .addLast(new NettyClientHandler());
             }
         });
@@ -89,7 +81,6 @@ public class ChannelProvider {
 
     private static Channel initiateConn(Bootstrap bootstrap, InetSocketAddress serverAddress)
             throws ExecutionException, InterruptedException {
-
         // create a CompletableFuture to track the result of the connection attempt
         CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
 

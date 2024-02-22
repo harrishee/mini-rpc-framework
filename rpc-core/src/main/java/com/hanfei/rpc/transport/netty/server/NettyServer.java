@@ -1,11 +1,11 @@
 package com.hanfei.rpc.transport.netty.server;
 
-import com.hanfei.rpc.transport.netty.codec.CommonDecoder;
-import com.hanfei.rpc.transport.netty.codec.CommonEncoder;
-import com.hanfei.rpc.hook.ShutdownHook;
+import com.hanfei.rpc.transport.netty.util.DecodeUtil;
+import com.hanfei.rpc.transport.netty.util.EncodeUtil;
+import com.hanfei.rpc.ShutdownHook;
 import com.hanfei.rpc.provider.ServiceProviderImpl;
-import com.hanfei.rpc.registry.nacos.NacosServiceRegistry;
-import com.hanfei.rpc.serialize.CommonSerializer;
+import com.hanfei.rpc.registry.NacosServiceRegistry;
+import com.hanfei.rpc.serializer.Serializer;
 import com.hanfei.rpc.transport.AbstractRpcServer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -19,18 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 
-
 @Slf4j
 public class NettyServer extends AbstractRpcServer {
-
-    private CommonSerializer serializer;
+    private final Serializer serializer;
 
     public NettyServer(String host, int port, Integer serializer) {
         this.host = host;
         this.port = port;
-        this.serializer = CommonSerializer.getByCode(serializer);
+        this.serializer = Serializer.getByCode(serializer);
 
-        // TODO check
         serviceRegistry = new NacosServiceRegistry();
         serviceProvider = new ServiceProviderImpl();
 
@@ -71,8 +68,8 @@ public class NettyServer extends AbstractRpcServer {
                             // add handlers to the pipeline
                             pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS))
                                     // my encoder, decoder, and handler
-                                    .addLast(new CommonEncoder(serializer))
-                                    .addLast(new CommonDecoder())
+                                    .addLast(new EncodeUtil(serializer))
+                                    .addLast(new DecodeUtil())
                                     .addLast(new NettyServerHandler());
                         }
                     });

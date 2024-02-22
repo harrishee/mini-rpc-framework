@@ -7,10 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 @Slf4j
 public class ServiceProviderImpl implements ServiceProvider {
-
     private static final Map<String, Object> serviceNameToObjectMap = new ConcurrentHashMap<>();
 
     @Override

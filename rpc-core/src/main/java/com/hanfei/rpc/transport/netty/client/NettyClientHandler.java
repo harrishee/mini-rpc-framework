@@ -1,9 +1,9 @@
 package com.hanfei.rpc.transport.netty.client;
 
-import com.hanfei.rpc.entity.RpcRequest;
-import com.hanfei.rpc.entity.RpcResponse;
-import com.hanfei.rpc.factory.SingletonFactory;
-import com.hanfei.rpc.serialize.CommonSerializer;
+import com.hanfei.rpc.model.RpcRequest;
+import com.hanfei.rpc.model.RpcResponse;
+import com.hanfei.rpc.util.SingletonFactory;
+import com.hanfei.rpc.serializer.Serializer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,10 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 
-
 @Slf4j
 public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
-
     // managing unprocessed requests and their completion
     private final UnprocessedRequests unprocessedRequests;
 
@@ -55,7 +53,7 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse>
                 // retrieve the channel for communication
                 Channel channel = ChannelProvider.getChannel(
                         (InetSocketAddress) ctx.channel().remoteAddress(),
-                        CommonSerializer.getByCode(CommonSerializer.DEFAULT_SERIALIZER)
+                        Serializer.getByCode(Serializer.DEFAULT_SERIALIZER)
                 );
 
                 // send a heartbeat packet to the channel

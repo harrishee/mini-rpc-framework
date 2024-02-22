@@ -1,19 +1,13 @@
 package com.hanfei.rpc.transport.netty.client;
 
-import com.hanfei.rpc.entity.RpcResponse;
+import com.hanfei.rpc.model.RpcResponse;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 public class UnprocessedRequests {
+    private static final ConcurrentHashMap<String, CompletableFuture<RpcResponse>> unprocessedResponseMap = new ConcurrentHashMap<>();
 
-    // concurrentHashMap with request IDs and CompletableFuture
-    private static ConcurrentHashMap<String, CompletableFuture<RpcResponse>> unprocessedResponseMap = new ConcurrentHashMap<>();
-
-    /**
-     *
-     */
     public void completeAssociatedFuture(RpcResponse rpcResponse) {
         CompletableFuture<RpcResponse> associatedFuture = unprocessedResponseMap.remove(rpcResponse.getRequestId());
 

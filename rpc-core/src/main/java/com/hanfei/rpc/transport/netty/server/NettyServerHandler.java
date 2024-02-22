@@ -1,9 +1,9 @@
 package com.hanfei.rpc.transport.netty.server;
 
-import com.hanfei.rpc.entity.RpcRequest;
-import com.hanfei.rpc.entity.RpcResponse;
-import com.hanfei.rpc.factory.SingletonFactory;
-import com.hanfei.rpc.transport.handler.RpcRequestHandler;
+import com.hanfei.rpc.model.RpcRequest;
+import com.hanfei.rpc.model.RpcResponse;
+import com.hanfei.rpc.util.SingletonFactory;
+import com.hanfei.rpc.transport.RpcRequestHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
@@ -11,10 +11,8 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
-
 @Slf4j
 public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
-
     private final RpcRequestHandler rpcRequestHandler;
 
     public NettyServerHandler() {
@@ -54,8 +52,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
      */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if (evt instanceof IdleStateEvent) {
-            // get the specific idle state from the event
+        if (evt instanceof IdleStateEvent) {            // get the specific idle state from the event
             IdleState state = ((IdleStateEvent) evt).state();
 
             // if the idle state is READ_IDLE (no data received)
