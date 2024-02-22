@@ -1,5 +1,0 @@
-
-a
-java:S1192
-"FDefine a constant instead of duplicating this literal " and " 3 times.(¾Óøÿÿÿÿ
-t	java:S120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(×¼É­øÿÿÿÿ
