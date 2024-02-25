@@ -10,7 +10,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HelloMsg implements Serializable {
-    private String serverName;
     private String clientName;
     private String message;
 }

@@ -4,9 +4,8 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.hanfei.rpc.enums.ErrorEnum;
 import com.hanfei.rpc.exception.RpcException;
-import com.hanfei.rpc.loadbalancer.LoadBalance;
+import com.hanfei.rpc.loadbalancer.LoadBalancer;
 import com.hanfei.rpc.loadbalancer.RoundRobin;
-import com.hanfei.rpc.registry.ServiceDiscovery;
 import com.hanfei.rpc.util.NacosUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,29 +14,26 @@ import java.util.List;
 
 @Slf4j
 public class NacosServiceDiscovery implements ServiceDiscovery {
-    private final LoadBalance loadBalance;
-
-    public NacosServiceDiscovery(LoadBalance loadBalance) {
-        if (loadBalance == null) {
-            this.loadBalance = new RoundRobin();
-        } else {
-            this.loadBalance = loadBalance;
-        }
+    private final LoadBalancer loadBalancer;
+    
+    public NacosServiceDiscovery(LoadBalancer loadBalancer) {
+        this.loadBalancer = (loadBalancer != null) ? loadBalancer : new RoundRobin();
     }
-
+    
     @Override
-    public InetSocketAddress getServerByService(String serviceName) {
+    public InetSocketAddress discoverService(String serviceName) {
         try {
             List<Instance> instances = NacosUtil.getAllInstance(serviceName);
             if (instances.isEmpty()) {
-                log.error("Cannot find corresponding service on Nacos: [{}]", serviceName);
+                log.error("在Nacos中找不到相应的服务实例: [{}]", serviceName);
                 throw new RpcException(ErrorEnum.SERVICE_NOT_FOUND);
             }
-            Instance instance = loadBalance.select(instances);
+            Instance instance = loadBalancer.select(instances);
             return new InetSocketAddress(instance.getIp(), instance.getPort());
         } catch (NacosException e) {
-            log.error("Error when looking up service: {}", e.getMessage());
+            log.error("Nacos查找服务时出错: ", e);
         }
+        
         return null;
     }
 }

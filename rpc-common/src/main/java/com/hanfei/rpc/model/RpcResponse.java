@@ -1,6 +1,6 @@
 package com.hanfei.rpc.model;
 
-import com.hanfei.rpc.enums.ResponseEnum;
+import com.hanfei.rpc.enums.ResponseStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,16 +17,16 @@ public class RpcResponse<T> implements Serializable {
     public static <T> RpcResponse<T> success(String requestId, T data) {
         RpcResponse<T> response = new RpcResponse<>();
         response.setRequestId(requestId);
-        response.setStatusCode(ResponseEnum.SUCCESS.getCode());
+        response.setStatusCode(ResponseStatus.SUCCESS.getCode());
         response.setData(data);
         return response;
     }
 
-    public static <T> RpcResponse<T> error(String requestId, ResponseEnum code) {
+    public static <T> RpcResponse<T> error(String requestId, ResponseStatus responseStatus) {
         RpcResponse<T> response = new RpcResponse<>();
         response.setRequestId(requestId);
-        response.setStatusCode(code.getCode());
-        response.setMessage(code.getMsg());
+        response.setStatusCode(responseStatus.getCode());
+        response.setMessage(responseStatus.getMsg());
         return response;
     }
 }

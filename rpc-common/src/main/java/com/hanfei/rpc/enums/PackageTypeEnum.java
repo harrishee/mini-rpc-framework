@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum PackageTypeEnum {
-    REQUEST_PACK(0),
-    RESPONSE_PACK(1);
+    REQUEST(0),
+    RESPONSE(1);
 
     private final int code;
 }

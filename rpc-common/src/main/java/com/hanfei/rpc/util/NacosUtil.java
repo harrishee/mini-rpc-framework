@@ -12,56 +12,49 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class NacosUtil {
-    private static final NamingService namingService;
-    private static final Set<String> serviceNamesSet = new HashSet<>();
-    private static InetSocketAddress registryAddress;
     private static final String NACOS_SERVER_ADDR = "127.0.0.1:8848";
-
-    static {
-        namingService = getNacosNamingService();
-    }
-
-    public static NamingService getNacosNamingService() {
+    private static InetSocketAddress registryAddr;
+    private static final Set<String> REGISTERED_SERVICE = new HashSet<>();
+    private static final NamingService NAMING_SERVICE = initNamingService();
+    
+    private static NamingService initNamingService() {
         try {
             return NamingFactory.createNamingService(NACOS_SERVER_ADDR);
         } catch (NacosException e) {
-            log.error("Error when connecting to Nacos: {}", e.getMessage());
+            log.error("连接Nacons注册中心时出错: ", e);
             throw new RpcException(ErrorEnum.FAILED_TO_CONNECT_TO_SERVICE_REGISTRY);
         }
     }
-
-    public static void registerService(String serviceName, InetSocketAddress address) throws NacosException {
-        namingService.registerInstance(serviceName, address.getHostName(), address.getPort());
-        NacosUtil.registryAddress = address;
-        serviceNamesSet.add(serviceName);
+    
+    public static void registerService(String serviceName, InetSocketAddress serverAddress) throws NacosException {
+        registryAddr = serverAddress;
+        REGISTERED_SERVICE.add(serviceName);
+        NAMING_SERVICE.registerInstance(serviceName, serverAddress.getHostName(), serverAddress.getPort());
+        log.info("Nacos服务注册成功: [{} -> {}]", serviceName, serverAddress);
     }
-
+    
     public static List<Instance> getAllInstance(String serviceName) throws NacosException {
-        return namingService.getAllInstances(serviceName);
+        return NAMING_SERVICE.getAllInstances(serviceName);
     }
-
+    
     public static void clearRegistry() {
-        if (!serviceNamesSet.isEmpty() && registryAddress != null) {
-            String host = registryAddress.getHostName();
-            int port = registryAddress.getPort();
-
-            // iterate through the registered service and deregister
-            Iterator<String> iterator = serviceNamesSet.iterator();
-            while (iterator.hasNext()) {
-                String serviceName = iterator.next();
+        if (!REGISTERED_SERVICE.isEmpty() && registryAddr != null) {
+            String host = registryAddr.getHostName();
+            int port = registryAddr.getPort();
+            REGISTERED_SERVICE.forEach(serviceName -> {
                 try {
-                    namingService.deregisterInstance(serviceName, host, port);
+                    NAMING_SERVICE.deregisterInstance(serviceName, host, port);
+                    log.info("Nacons服务注销成功: [{} -> {}]", serviceName, registryAddr);
                 } catch (NacosException e) {
-                    log.error("Error when deregistering service {}", e.getMessage());
+                    log.error("Nacons服务注销失败: [{} -> {}]", serviceName, registryAddr);
                 }
-            }
+            });
         }
     }
 }

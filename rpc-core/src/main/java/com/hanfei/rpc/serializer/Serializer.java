@@ -11,14 +11,13 @@ public interface Serializer {
 
     int getCode();
 
-    static Serializer getByCode(int code) {
+    static Serializer getSerializer(int code) {
         switch (code) {
-            case 0:
-                return new KryoSerializer();
             case 1:
                 return new JsonSerializer();
+            case 0:
             default:
-                return null;
+                return new KryoSerializer();
         }
     }
 }

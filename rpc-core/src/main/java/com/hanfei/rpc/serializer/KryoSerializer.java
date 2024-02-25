@@ -15,41 +15,53 @@ import java.io.ByteArrayOutputStream;
 
 @Slf4j
 public class KryoSerializer implements Serializer {
-    // ThreadLocal to ensure thread safety
-    private static final ThreadLocal<Kryo> kryoThreadLocal = ThreadLocal.withInitial(() -> {        Kryo kryo = new Kryo();
+    // 使用 ThreadLocal 确保 Kryo 实例的线程安全性
+    private static final ThreadLocal<Kryo> KRYO_THREAD_LOCAL = ThreadLocal.withInitial(() -> {
+        Kryo kryo = new Kryo();
         kryo.register(RpcResponse.class);
         kryo.register(RpcRequest.class);
-
+        
         kryo.setReferences(true);
         kryo.setRegistrationRequired(false);
         return kryo;
     });
-
+    
     @Override
-    public byte[] serialize(Object obj) {        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    public byte[] serialize(Object obj) {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              Output output = new Output(byteArrayOutputStream)) {
-            Kryo kryo = kryoThreadLocal.get();
+            Kryo kryo = KRYO_THREAD_LOCAL.get();
+            
+            // 使用 Kryo 序列化对象
             kryo.writeObject(output, obj);
-            kryoThreadLocal.remove();
+            
+            // 使用完毕后，从 ThreadLocal 中移除 Kryo 实例，避免内存泄漏
+            KRYO_THREAD_LOCAL.remove();
             return output.toBytes();
-        } catch (Exception e) {            log.error("Error when serializing: {}", e.getMessage());
-            throw new SerializeException("Error when serializing using Kryo");
+        } catch (Exception e) {
+            log.error("序列化时出现错误: {}", e.getMessage());
+            throw new SerializeException("使用 Kryo 序列化时出现错误");
         }
     }
-
+    
     @Override
-    public Object deserialize(byte[] bytes, Class<?> clazz) {        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+    public Object deserialize(byte[] bytes, Class<?> clazz) {
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
              Input input = new Input(byteArrayInputStream)) {
-            Kryo kryo = kryoThreadLocal.get();
-            Object obj = kryo.readObject(input, clazz);
-            kryoThreadLocal.remove();
-            return obj;
-        } catch (Exception e) {            log.error("Error when deserializing: {}", e.getMessage());
-            throw new SerializeException("Error when deserializing using Kryo");
+            Kryo kryo = KRYO_THREAD_LOCAL.get();
+            
+            // 使用 Kryo 反序列化对象
+            Object res = kryo.readObject(input, clazz);
+            KRYO_THREAD_LOCAL.remove();
+            return res;
+        } catch (Exception e) {
+            log.error("反序列化时出现错误: {}", e.getMessage());
+            throw new SerializeException("使用 Kryo 反序列化时出现错误");
         }
     }
-
+    
     @Override
-    public int getCode() {        return SerializerEnum.valueOf("KRYO").getCode();
+    public int getCode() {
+        return SerializerEnum.KRYO.getCode();
     }
 }

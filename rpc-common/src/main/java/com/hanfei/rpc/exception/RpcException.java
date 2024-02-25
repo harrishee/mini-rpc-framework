@@ -4,7 +4,7 @@ import com.hanfei.rpc.enums.ErrorEnum;
 
 public class RpcException extends RuntimeException {
     public RpcException(ErrorEnum error, String detail) {
-        super(error.getMessage() + ": " + detail);
+        super(error.getMsg() + ": " + detail);
     }
 
     public RpcException(String msg, Throwable cause) {
@@ -12,6 +12,6 @@ public class RpcException extends RuntimeException {
     }
 
     public RpcException(ErrorEnum error) {
-        super(error.getMessage());
+        super(error.getMsg());
     }
 }

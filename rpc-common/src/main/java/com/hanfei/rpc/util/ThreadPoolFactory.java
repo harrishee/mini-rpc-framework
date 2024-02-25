@@ -15,80 +15,68 @@ public class ThreadPoolFactory {
     private static final int MAXIMUM_POOL_SIZE_SIZE = 100;
     private static final int KEEP_ALIVE_TIME = 1;
     private static final int BLOCKING_QUEUE_CAPACITY = 100;
-
-    /**
-     * use threadNamePrefix to distinguish different thread pools
-     * we can think of thread pools with the same threadNamePrefix as serving the same business scenario
-     */
-    private static final Map<String, ExecutorService> THREAD_POOLS_MAP = new ConcurrentHashMap<>();
-
+    private static final Map<String, ExecutorService> THREAD_POOL_MAP = new ConcurrentHashMap<>();
+    
     public static ExecutorService createDefaultThreadPool(String threadNamePrefix) {
         return createDefaultThreadPool(threadNamePrefix, false);
     }
-
+    
     public static ExecutorService createDefaultThreadPool(String threadNamePrefix, Boolean daemon) {
-        // create a thread pool if it does not exist
-        ExecutorService pool = THREAD_POOLS_MAP.computeIfAbsent(
+        ExecutorService pool = THREAD_POOL_MAP.computeIfAbsent(
                 threadNamePrefix, k -> createThreadPool(threadNamePrefix, daemon)
         );
 
-        // if the thread pool is shutdown, replace it with a new one
+        // 如果线程池已经关闭，创建一个新的线程池替代
         if (pool.isShutdown() || pool.isTerminated()) {
-            THREAD_POOLS_MAP.remove(threadNamePrefix);
+            THREAD_POOL_MAP.remove(threadNamePrefix);
             pool = createThreadPool(threadNamePrefix, daemon);
-            THREAD_POOLS_MAP.put(threadNamePrefix, pool);
+            THREAD_POOL_MAP.put(threadNamePrefix, pool);
         }
+
         return pool;
     }
-
-    /**
-     * create a thread factory
-     */
-    private static ThreadFactory createThreadFactory(String threadNamePrefix, Boolean daemon) {
-        if (threadNamePrefix != null) {
-            if (daemon != null) {
-                return new ThreadFactoryBuilder()
-                        .setNameFormat(threadNamePrefix + "-%d")
-                        .setDaemon(daemon)
-                        .build();
-            } else {
-                return new ThreadFactoryBuilder()
-                        .setNameFormat(threadNamePrefix + "-%d")
-                        .build();
-            }
-        }
-        return Executors.defaultThreadFactory();
-    }
-
-    /**
-     * create a thread pool
-     */
+    
     private static ExecutorService createThreadPool(String threadNamePrefix, Boolean daemon) {
-        // create a blocking queue for holding tasks
+        // 创建任务队列，用于存放待执行的任务
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
-        // create a thread factory
+        // 创建线程工厂，用于创建线程
         ThreadFactory threadFactory = createThreadFactory(threadNamePrefix, daemon);
-        // create ThreadPoolExecutor with the provided configurations
+        // 创建并返回线程池
         return new ThreadPoolExecutor(
                 CORE_POOL_SIZE, MAXIMUM_POOL_SIZE_SIZE, KEEP_ALIVE_TIME,
                 TimeUnit.MINUTES, workQueue, threadFactory
         );
     }
+    
+    private static ThreadFactory createThreadFactory(String threadNamePrefix, Boolean daemon) {
+        // 如果指定了线程名前缀，则使用自定义的线程工厂
+        if (threadNamePrefix != null) {
+            
+            // 用 guava 的 ThreadFactoryBuilder 创建线程工厂
+            return new ThreadFactoryBuilder()
+                    .setNameFormat(threadNamePrefix + "-%d")
+                    .setDaemon(daemon != null && daemon)
+                    .build();
+        }
 
-    public static void shutDownAll() {
-        log.info("Shutting down all thread pools...");
-
-        // iterate through all thread pools and shut them down
-        THREAD_POOLS_MAP.entrySet().parallelStream().forEach(entry -> {
+        // 否则使用默认的线程工厂
+        return Executors.defaultThreadFactory();
+    }
+    
+    public static void shutdownAllThreadPool() {
+        log.info("正在关闭所有线程池...");
+        
+        THREAD_POOL_MAP.entrySet().parallelStream().forEach(entry -> {
             ExecutorService executorService = entry.getValue();
             executorService.shutdown();
             try {
+                // 等待线程池中的任务完成
                 executorService.awaitTermination(10, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                log.error("Error shutting down thread pool");
+                log.error("关闭线程池时出错");
                 executorService.shutdownNow();
             }
         });
-        log.info("All thread pools shut down successfully");
+        log.info("所有线程池已成功关闭");
     }
 }
