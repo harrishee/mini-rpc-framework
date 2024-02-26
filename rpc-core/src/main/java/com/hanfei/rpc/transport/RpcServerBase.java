@@ -26,7 +26,7 @@ public abstract class RpcServerBase implements RpcServer {
     public <T> void publishService(String serviceName, T serviceInstance) {
         serviceProvider.putServiceInstance(serviceName, serviceInstance);
         serviceRegistry.registerService(serviceName, new InetSocketAddress(host, port));
-        log.info("RpcServerBase，服务 [{}] 注册成功", serviceName);
+        log.info("根服务端，服务 [{}] 注册成功", serviceName);
     }
     
     public void serviceScan() {
@@ -58,7 +58,7 @@ public abstract class RpcServerBase implements RpcServer {
                     }
                 }
             }
-            log.info("RpcServerBase，服务扫描完成");
+            log.info("根服务端，服务扫描完成");
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {
             throw new RpcException("服务扫描时出现错误", e);

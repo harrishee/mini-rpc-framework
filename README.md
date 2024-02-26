@@ -1,95 +1,96 @@
 # Mini RPC Framework
 
-Mini RPC Framework is a lightweight RPC framework based on Java, designed to facilitate remote procedure calls and
-distributed communication.
-The framework provides two network communication methods, Socket and Netty, as well as two serialization methods, JSON
-and Kryo.
-It utilizes Nacos as a service registration center and implements a simple load balancing mechanism.
+English | [简体中文](README_zh.md)
 
-# Getting Started
+## 1. Project Introduction
 
-Chinese version: [Click here](README_CN.md)
+The Mini RPC Framework is a Java-based lightweight RPC framework designed to simplify remote procedure calls by hiding the complexities of underlying network communication. It allows developers to focus more on implementing business logic. The framework supports both Socket and Netty for network communication, offers JSON and Kryo for serialization, utilizes Nacos as its service registry center, and implements a simple round-robin load balancing mechanism along with a custom, straightforward transmission protocol.
 
-Before you begin, ensure that Nacos is installed and properly configured for service registration and discovery.
+## 2. About RPC
 
-### 1. Start the Nacos Server
+RPC (Remote Procedure Call) allows for requesting services from a remote computer program across a network without needing to understand the underlying network technologies. It abstracts the details of network communication, enabling developers to invoke remote methods as if they were local.
 
-The Nacos server is a crucial component for service registration and discovery in Mini RPC Framework. To start it,
-follow these steps:
+The process involves the following steps:
 
-1. Navigate to the Nacos installation directory in your terminal.
-2. Start the Nacos server in standalone mode:
-    ```shell
-    sh startup.sh -m standalone
-    ```
+1. **Client-side Call**: The client invokes a local stub function, similar to calling any standard function.
+2. **Request Packaging**: The stub packages the method name, parameters, and other information into a request message upon invocation.
+3. **Network Transmission**: This request message is sent over the network to the server.
+4. **Server-side Request Parsing**: The server listener decodes the request, identifying the specified method and parameters.
+5. **Remote Procedure Execution**: The server executes the identified method and sends the result back.
+6. **Result Return**: The server sends the response message back to the client's stub over the network, which then parses and returns the result to the client caller.
 
-This command initiates the Nacos server and prepares it to manage your services.
+## 3. Usage Process
 
-### 2. Server-Side Implementation
+Recommend to open the project in an IDE for testing custom service interfaces and implementations.
 
-Now, let's implement a service on the server-side:
+### 1: Install Nacos
 
-1. `Implement a service interface`: Define your service interface that includes the methods you want to make remotely
-   accessible.
-2. `Register the service`: Use the Mini RPC Framework to register your service on the server. This registration allows
-   clients to discover and access your service.
-3. `Start the server`: Start your server to make your service available for remote calls.
+Ensure Nacos is installed on your device. If not, quickly start Nacos with the following Docker command:
 
-### 3. Start the Client
+```bash
+docker run --name nacos-rpc-dev -e MODE=standalone -p 8848:8848 nacos/nacos-server:v2.2.0
+```
 
-Once you've set up the server, you can start the client and begin making remote calls:
+### 2: Verify Nacos
 
-1. `Initialize the client`: Configure and initialize the Mini RPC client, specifying the desired serialization method
-   and other settings.
-2. `Create proxies`: Use the proxy class provided by the framework to create proxy objects for your services. These
-   proxy objects enable you to invoke remote methods as if they were local.
-3. `Call the service`: Access the methods of your service through the proxy objects. The framework takes care of the
-   remote communication details, allowing you to focus on your application logic.
+Visit [http://localhost:8848/nacos](http://localhost:8848/nacos) to confirm Nacos is operational.
 
-# 1. Module Overview
+### 3: Add Service Interfaces
 
-- `rpc-api`: Common service interfaces
-- `rpc-common`: Entities, enumerations, exceptions, utility classes, and more
-- `rpc-core`: Client, server, service registration center, serializers, load balancers, and more
-- `test-client`: Client functionality for registering services and making requests
-- `test-server`: Server functionality for registering services and starting servers to receive and process client
-  requests
+Add the required service interfaces to the `rpc-api` module.
 
-# 2. Project Development
+### 4: Implement Service Interfaces
 
-## 1. `feat: basic rpc framework`
+Implement these interfaces in the `impl` package under the `start-server` module.
 
-Implemented the basic RPC framework using JDK serialization and Socket communication. Currently, it supports basic
-remote method invocation.
+### 5: Start the Server
 
-Drawback: After registering a service, the server starts independently, allowing only one service to be registered on
-each server.
+Launch `RpcServerLauncher`, with options to adjust the default `serverType`, `host`, and `port`.
 
-## 2. `feat: multi-service support`
+### 6: Client Service Calls
 
-Introduced a service registry mechanism, allowing services to be registered based on their interface names and retrieved
-based on interface names.
+In the `start-client` module, call services using `RpcClientLauncher`.
 
-## 3. `feat: netty communication`
+## 4. Module Overview
 
-Introduced Netty as the communication framework, replacing the previous Socket-based communication method.
-This transitioned from traditional BIO transmission to the more efficient NIO approach.
+- **rpc-api**: Defines all service interfaces, shared between service providers and consumers.
+- **rpc-common**: Common framework components, like exceptions, enums, and transport formats `RpcRequest` and `RpcResponse`.
+- **rpc-core**: Core implementation, including service registration, discovery, serialization, and network transmission.
+- **start-server**: Server startup entry, responsible for launching the RPC server and service registration.
+- **start-client**: Client startup entry, responsible for initiating RPC calls and consuming services.
 
-## 4. `feat: kryo serializer`
+## 5. Custom Transport Format
 
-Introduced the Kryo serializer, replacing the previous JSON serializer.
+### RpcRequest
 
-## 5. `feat: nacos services`
+`RpcRequest` class format for client requests to the server during an RPC call:
 
-Introduced Nacos as the service registration center, replacing the previous local registry approach.
-This move shifted the service registry from local to remote servers, making service registration and discovery more
-flexible.
+- **requestId**: Uniquely identifies a request for asynchronous processing and response matching.
+- **interfaceName**, **methodName**, **parameters**, **paramTypes**: Together determine the method to be called. They ensure unique method positioning and correct invocation, preventing conflicts in method overloading.
+- **heartBeat**: Indicates if the request is a heartbeat message to maintain connection liveliness and prevent disconnections from prolonged idleness.
 
-## 6. `feat: load balance`
+### RpcResponse
 
-Introduced a load balancing mechanism, implementing simple random and round-robin load balancing.
+`RpcResponse<T>` class format for server responses back to the client:
 
-## 7. `feat: auto service registration`
+- **requestId**: Corresponds to `RpcRequest`'s `requestId`, used for client-side request-response matching.
+- **statusCode**: Indicates the processing outcome (success, failure, or other statuses).
+- **message**: Response message, typically contains error information if the call fails.
+- **data**: The generic parameter representing the specific response data or method call return value.
 
-Introduced an automatic service registration mechanism, making service registration more convenient.
-It eliminates the need for manual service registration when starting servers.
+### Custom Protocol Format
+
+A custom protocol format standardizes data transmission within the Mini RPC framework:
+
+- **Magic Number**: 4 bytes, a fixed value `0xCAFEBABE`, identifies a valid RPC protocol package.
+- **Package Type**: 4 bytes, distinguishes between request (`RpcRequest`) and response (`RpcResponse`) data types.
+- **Serializer Type**: 4 bytes, indicates the serializer used for serializing and deserializing request or response data.
+- **Data Length**: 4 bytes, the length of the subsequent data part, for parsing specific data content.
+- **Data**: The actual data content, serialized `RpcRequest` or `RpcResponse` objects.
+
+## 6. TODO
+
+- [ ] Documentation improvements
+- [ ] English code comments and logs
+- [ ] Consistent hashing for load balancing
+- [ ] Fix Docker deployment issues

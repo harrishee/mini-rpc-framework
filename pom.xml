@@ -11,8 +11,8 @@
     <modules>
         <module>rpc-api</module>
         <module>rpc-common</module>
-        <module>start-server</module>
         <module>rpc-core</module>
+        <module>start-server</module>
         <module>start-client</module>
     </modules>
 

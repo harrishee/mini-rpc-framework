@@ -60,6 +60,8 @@ public class NettyClient implements RpcClient {
                         .addLast(new NettyClientChannelHandler()); // 自定义客户端处理器
             }
         });
+        
+        log.info("Netty客户端，初始化完成");
     }
     
     @Override

@@ -34,6 +34,8 @@ public class SocketClient implements RpcClient {
     public SocketClient(Integer serializerCode, LoadBalancer loadBalancer) {
         this.serializer = Serializer.getSerializer(serializerCode);
         this.serviceDiscovery = new NacosServiceDiscovery(loadBalancer);
+        
+        log.info("Socket客户端，初始化完成");
     }
     
     @Override

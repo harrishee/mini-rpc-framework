@@ -1,19 +1,17 @@
 package com.hanfei.rpc.transport.server;
 
-import com.hanfei.rpc.transport.codec.NettyDecoder;
-import com.hanfei.rpc.transport.codec.NettyEncoder;
-import com.hanfei.rpc.util.JVMUtil;
 import com.hanfei.rpc.provider.LocalServiceProvider;
 import com.hanfei.rpc.registry.NacosServiceRegistry;
 import com.hanfei.rpc.serializer.Serializer;
 import com.hanfei.rpc.transport.RpcServerBase;
+import com.hanfei.rpc.transport.codec.NettyDecoder;
+import com.hanfei.rpc.transport.codec.NettyEncoder;
+import com.hanfei.rpc.util.JVMUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,15 +43,14 @@ public class NettyServer extends RpcServerBase {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .handler(new LoggingHandler(LogLevel.INFO))
                     .option(ChannelOption.SO_BACKLOG, 256)
-                    .option(ChannelOption.SO_KEEPALIVE, true) // 开启TCP心跳机制，保持连接的活跃状态，避免被意外关闭。
-                    .childOption(ChannelOption.TCP_NODELAY, true) // 开启Nagle算法，尽可能发送大块数据，减少网络传输。
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    .childOption(ChannelOption.TCP_NODELAY, true)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
                             ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast(new IdleStateHandler(10, 0, 0, TimeUnit.SECONDS)) // 心跳检测
+                            pipeline.addLast(new IdleStateHandler(10, 0, 0, TimeUnit.SECONDS))
                                     .addLast(new NettyEncoder(serializer))
                                     .addLast(new NettyDecoder())
                                     .addLast(new NettyServerChannelHandler()); // 自定义数据处理器

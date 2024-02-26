@@ -18,7 +18,7 @@ import java.util.Set;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class NacosUtil {
-    private static final String NACOS_SERVER_ADDR = "127.0.0.1:8848";
+    private static final String NACOS_SERVER_ADDR = System.getenv().getOrDefault("NACOS_SERVER_ADDR", "127.0.0.1:8848");
     private static InetSocketAddress registryAddr;
     private static final Set<String> REGISTERED_SERVICE = new HashSet<>();
     private static final NamingService NAMING_SERVICE = initNamingService();
