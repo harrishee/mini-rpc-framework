@@ -65,6 +65,7 @@ public class RpcClientProxy implements InvocationHandler {
                 // 客户端发送请求后会立即返回一个CompletableFuture对象，然后继续执行后续的代码。在这个等待期间，客户端可以做其他操作
                 
                 // 等待异步操作的完成，并获取结果。这个是阻塞的，会等待直到异步操作完成（服务器响应到达），然后才继续执行后续
+                // 可以通过 回调函数 的方式来处理异步操作的结果，而不是阻塞等待
                 response = future.get();
             } catch (InterruptedException | ExecutionException e) {
                 log.info("Error when sending request: {}", e.getMessage());

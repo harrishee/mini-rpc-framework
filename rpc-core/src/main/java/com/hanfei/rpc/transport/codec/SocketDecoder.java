@@ -45,10 +45,6 @@ public class SocketDecoder {
         in.read(numberBytes);
         int serializerCode = bytesToInt(numberBytes);
         Serializer serializer = Serializer.getSerializer(serializerCode);
-        if (serializer == null) {
-            log.error("读取序列化器码错误: {}", serializerCode);
-            throw new RpcException(ErrorEnum.UNKNOWN_SERIALIZER);
-        }
         
         // 读取数据长度，然后根据长度读取数据
         in.read(numberBytes);

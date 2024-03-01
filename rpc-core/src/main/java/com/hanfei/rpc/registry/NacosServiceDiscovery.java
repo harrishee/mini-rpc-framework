@@ -28,7 +28,10 @@ public class NacosServiceDiscovery implements ServiceDiscovery {
                 log.error("在Nacos中找不到相应的服务实例: [{}]", serviceName);
                 throw new RpcException(ErrorEnum.SERVICE_NOT_FOUND);
             }
+            
+            // 使用负载均衡从所有实例中选择一个
             Instance instance = loadBalancer.select(instances);
+            log.info("选择的服务实例是: [{}]", instance);
             return new InetSocketAddress(instance.getIp(), instance.getPort());
         } catch (NacosException e) {
             log.error("Nacos查找服务时出错: ", e);

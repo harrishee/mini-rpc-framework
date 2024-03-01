@@ -20,15 +20,11 @@
     <dependencies>
         <dependency>
             <groupId>com.hanfei</groupId>
-            <artifactId>rpc-core</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
+            <artifactId>rpc-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.hanfei</groupId>
-            <artifactId>rpc-api</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
+            <artifactId>rpc-core</artifactId>
         </dependency>
     </dependencies>
 

@@ -21,7 +21,9 @@ public class KryoSerializer implements Serializer {
         kryo.register(RpcResponse.class);
         kryo.register(RpcRequest.class);
         
+        // 启用对象引用
         kryo.setReferences(true);
+        // 允许未注册的类被序列化和反序列化
         kryo.setRegistrationRequired(false);
         return kryo;
     });

@@ -43,11 +43,7 @@ public class NettyDecoder extends ReplayingDecoder<Void> {
         // 3. 读取4字节序列化器类型，确定使用哪种序列化器
         int serializerCode = in.readInt();
         Serializer serializer = Serializer.getSerializer(serializerCode);
-        if (serializer == null) {
-            log.error("不识别的序列化器: {}", serializerCode);
-            throw new RpcException(ErrorEnum.UNKNOWN_SERIALIZER);
-        }
-
+        
         // 4. 读取4字节数据长度，根据长度读取数据
         int dateLength = in.readInt();
 

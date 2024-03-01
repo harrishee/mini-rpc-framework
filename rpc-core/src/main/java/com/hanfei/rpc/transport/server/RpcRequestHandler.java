@@ -9,13 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class RpcRequestHandler {
     private static final ServiceProvider SERVICE_PROVIDER = new LocalServiceProvider();
-    private static final Map<String, Method> METHOD_CACHE = new ConcurrentHashMap<>();
+    
+    // 不需要对 Method 做缓存
+    // 1. 反射获取的速度很快的，缓存也是放到 map 里面，速度没什么提升，反而导致空间占用太大，得不偿失
+    // 2. 反射调用的性能会比直接调用慢，但是这个项目反射调用比直接调用好，而且速度瓶颈是网络
     
     public RpcResponse<?> processRequest(RpcRequest rpcRequest) {
         // 获取服务实例
@@ -25,44 +26,15 @@ public class RpcRequestHandler {
             return RpcResponse.error(rpcRequest.getRequestId(), ResponseStatus.SERVICE_NOT_FOUND);
         }
         
-        // 接口名 + 方法名 + 参数类型 作为唯一标识，防止方法重载导致问题
-        String methodKey = generateMethodKey(rpcRequest);
-        
-        // 获取方法
-        Method method = METHOD_CACHE.computeIfAbsent(methodKey, k -> findServiceMethod(rpcRequest, serviceInstance));
-        if (method == null) {
-            return RpcResponse.error(rpcRequest.getRequestId(), ResponseStatus.METHOD_NOT_FOUND);
-        }
-        
+        Object methodResult;
         try {
-            // 使用反射调用目标方法
-            Object methodResult = method.invoke(serviceInstance, rpcRequest.getParameters());
+            Method method = serviceInstance.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());
+            methodResult = method.invoke(serviceInstance, rpcRequest.getParameters());
             log.info("RPC请求处理器，方法调用成功: [{} : {}]", rpcRequest.getInterfaceName(), rpcRequest.getMethodName());
             return RpcResponse.success(rpcRequest.getRequestId(), methodResult);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             log.error("RPC请求处理器，方法调用失败: ", e);
             return RpcResponse.error(rpcRequest.getRequestId(), ResponseStatus.ERROR);
         }
-    }
-    
-    // 获取服务方法
-    private Method findServiceMethod(RpcRequest rpcRequest, Object serviceInstance) {
-        try {
-            return serviceInstance.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());
-        } catch (NoSuchMethodException e) {
-            log.error("RPC请求处理器，找不到方法: {}", rpcRequest.getMethodName());
-            return null;
-        }
-    }
-    
-    // 生成方法的唯一标识
-    private String generateMethodKey(RpcRequest rpcRequest) {
-        StringBuilder keyBuilder = new StringBuilder();
-        keyBuilder.append(rpcRequest.getInterfaceName()).append("#");
-        keyBuilder.append(rpcRequest.getMethodName());
-        for (Class<?> paramType : rpcRequest.getParamTypes()) {
-            keyBuilder.append("#").append(paramType.getName());
-        }
-        return keyBuilder.toString();
     }
 }
